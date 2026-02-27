@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuth() {
+      return request.auth != null;
+    }
+    function userExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function getUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function isAdmin() {
+      return isAuth() && userExists() && getUser().role == 'admin';
+    }
+    function canAccessProvince(province) {
+      return isAuth() && userExists() && (getUser().role == 'admin' || getUser().province == province);
+    }
+    
+    match /users/{userId} {
+      allow read, write: if isAuth() && request.auth.uid == userId;
+    }
+    
+    match /individuals/{docId} {
+      allow read: if canAccessProvince(resource.data.province);
+      allow create: if isAuth() && userExists() && getUser().role == 'encoder' && request.resource.data.province == getUser().province;
+      allow update: if canAccessProvince(resource.data.province);
+      allow delete: if isAdmin();
+    }
+    
+    match /fcas/{docId} {
+      allow read: if canAccessProvince(resource.data.province);
+      allow create: if isAuth() && userExists() && getUser().role == 'encoder' && request.resource.data.province == getUser().province;
+      allow update: if canAccessProvince(resource.data.province);
+      allow delete: if isAdmin();
+    }
+  }
+}
