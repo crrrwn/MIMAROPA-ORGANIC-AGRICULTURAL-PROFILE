@@ -2,11 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes text-fade-in-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
 * {
   font-family: 'Poppins', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  input, select, textarea {
+    @apply transition-colors duration-150;
+  }
+  button:focus-visible, a:focus-visible {
+    @apply outline-2 outline-offset-2 outline-oa-green;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-oa-green hover:bg-oa-green-dark text-white font-medium rounded-lg shadow-sm hover:shadow transition-all duration-200;
+  }
+  .card-base {
+    @apply bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  .input-base {
+    @apply w-full px-4 py-2.5 border border-gray-200 rounded-lg text-oa-brown placeholder:text-gray-400 focus:border-oa-green focus:ring-2 focus:ring-oa-green/25 outline-none transition-all duration-150;
+  }
 }

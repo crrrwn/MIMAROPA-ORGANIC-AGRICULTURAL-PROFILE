@@ -1,15 +1,26 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { PROVINCES } from '../constants';
+
+function emptyCommodity() {
+  return { totalArea: 0, items: [] };
+}
 
 function emptyMetrics() {
   return {
     oaArea: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0 },
     practitioners: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0 },
     fcas: { engageInOA: 0 },
-    commodities: { rice: 0, corn: 0, vegetables: 0, livestockPoultry: 0, fertilizer: 0, others: 0 },
-    pgs: { accreditedGroups: 0, applyingForAccreditation: 0, certifiedFarmers: 0, certifiedArea: 0 },
+    commodities: {
+      rice: emptyCommodity(),
+      corn: emptyCommodity(),
+      vegetables: emptyCommodity(),
+      livestockPoultry: emptyCommodity(),
+      fertilizer: emptyCommodity(),
+      others: emptyCommodity(),
+    },
+    pgs: { accreditedGroups: 0, applyingForAccreditation: 0, engagedOrganicFarming: 0, certifiedFarmers: 0, certifiedArea: 0 },
   };
 }
 
@@ -20,17 +31,14 @@ export function useDashboardDataByProvince(province = null) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const indRef = collection(db, 'individuals');
-        const fcasRef = collection(db, 'fcas');
-        const indQuery = province ? query(indRef, where('province', '==', province)) : indRef;
-        const fcasQuery = province ? query(fcasRef, where('province', '==', province)) : fcasRef;
-        const [indSnap, fcasSnap] = await Promise.all([
-          getDocs(indQuery),
-          getDocs(fcasQuery),
-        ]);
+    let indUnsub, fcasUnsub;
+    let indSnapData = { docs: [] };
+    let fcasSnapData = { docs: [] };
 
+    function processAndSet() {
+      try {
+        const indSnap = indSnapData;
+        const fcasSnap = fcasSnapData;
         const byProvince = {};
         PROVINCES.forEach((p) => {
           byProvince[p] = emptyMetrics();
@@ -39,6 +47,7 @@ export function useDashboardDataByProvince(province = null) {
         const processIndividual = (d, target) => {
           const cert = (d.certification || '').toLowerCase();
           const area = parseFloat(d.organicArea) || 0;
+          const name = d.completeName || [d.surname, d.firstName].filter(Boolean).join(' ') || 'N/A';
           if (cert.includes('devoted')) {
             target.oaArea.totalDevoted += area;
             target.practitioners.totalDevoted++;
@@ -53,30 +62,56 @@ export function useDashboardDataByProvince(province = null) {
             target.oaArea.total3rdParty += area;
             target.practitioners.total3rdParty++;
           }
-          const coms = Array.isArray(d.commodities) ? d.commodities : (d.commodity ? [{ commodity: d.commodity }] : []);
+          const coms = Array.isArray(d.commodities) ? d.commodities : (d.commodity ? [{ commodity: d.commodity, sizeOfArea: d.organicArea, products: '' }] : []);
           coms.forEach((c) => {
             const comm = (c.commodity || '').toLowerCase();
-            if (comm.includes('rice')) target.commodities.rice++;
-            else if (comm.includes('corn')) target.commodities.corn++;
-            else if (comm.includes('vegetable')) target.commodities.vegetables++;
-            else if (comm.includes('livestock') || comm.includes('poultry')) target.commodities.livestockPoultry++;
-            else if (comm.includes('fertilizer')) target.commodities.fertilizer++;
-            else if (comm) target.commodities.others++;
+            const itemArea = parseFloat(c.sizeOfArea) || 0;
+            const itemVolume = parseFloat(c.annualVolume) || 0;
+            const item = { name, products: c.products || '', area: itemArea, volume: itemVolume, commodity: c.commodity };
+            if (comm.includes('rice')) {
+              target.commodities.rice.totalArea += itemArea;
+              target.commodities.rice.items.push(item);
+            } else if (comm.includes('corn')) {
+              target.commodities.corn.totalArea += itemArea;
+              target.commodities.corn.items.push(item);
+            } else if (comm.includes('vegetable')) {
+              target.commodities.vegetables.totalArea += itemArea;
+              target.commodities.vegetables.items.push(item);
+            } else if (comm.includes('livestock') || comm.includes('poultry')) {
+              target.commodities.livestockPoultry.totalArea += itemArea;
+              target.commodities.livestockPoultry.items.push(item);
+            } else if (comm.includes('fertilizer')) {
+              target.commodities.fertilizer.totalArea += itemArea;
+              target.commodities.fertilizer.items.push(item);
+            } else if (comm) {
+              target.commodities.others.totalArea += itemArea;
+              target.commodities.others.items.push(item);
+            }
           });
         };
 
-        indSnap.docs.forEach((docSnap) => {
+        (indSnap.docs || []).forEach((docSnap) => {
           const d = docSnap.data();
           const p = d.province || 'Other';
           if (!byProvince[p]) byProvince[p] = emptyMetrics();
           processIndividual(d, byProvince[p]);
         });
 
-        fcasSnap.docs.forEach((docSnap) => {
+        (fcasSnap.docs || []).forEach((docSnap) => {
           const d = docSnap.data();
           const p = d.province || 'Other';
           if (!byProvince[p]) byProvince[p] = emptyMetrics();
           if (d.engageInOA) byProvince[p].fcas.engageInOA++;
+          const fcaCert = (d.certification || '').toLowerCase();
+          if (fcaCert.includes('pgs accredited') || fcaCert.includes('pgs accreditation')) {
+            byProvince[p].pgs.accreditedGroups++;
+          }
+          if (fcaCert.includes('applying for accreditation') || fcaCert.includes('applying')) {
+            byProvince[p].pgs.applyingForAccreditation++;
+          }
+          if (fcaCert.includes('engaged organic farming') || fcaCert.includes('engaged')) {
+            byProvince[p].pgs.engagedOrganicFarming++;
+          }
         });
 
         if (province) {
@@ -86,8 +121,7 @@ export function useDashboardDataByProvince(province = null) {
         }
         setPerProvince(byProvince);
 
-        const target = province ? (byProvince[province] || emptyMetrics()) : PROVINCES.reduce((acc, p) => {
-          const m = byProvince[p] || emptyMetrics();
+        const target = province ? (byProvince[province] || emptyMetrics()) : Object.values(byProvince).reduce((acc, m) => {
           acc.oaArea.totalDevoted += m.oaArea.totalDevoted;
           acc.oaArea.totalPGSCertified += m.oaArea.totalPGSCertified;
           acc.oaArea.total3rdParty += m.oaArea.total3rdParty;
@@ -95,14 +129,13 @@ export function useDashboardDataByProvince(province = null) {
           acc.practitioners.totalPGSCertified += m.practitioners.totalPGSCertified;
           acc.practitioners.total3rdParty += m.practitioners.total3rdParty;
           acc.fcas.engageInOA += m.fcas.engageInOA;
-          acc.commodities.rice += m.commodities.rice;
-          acc.commodities.corn += m.commodities.corn;
-          acc.commodities.vegetables += m.commodities.vegetables;
-          acc.commodities.livestockPoultry += m.commodities.livestockPoultry;
-          acc.commodities.fertilizer += m.commodities.fertilizer;
-          acc.commodities.others += m.commodities.others;
+          ['rice', 'corn', 'vegetables', 'livestockPoultry', 'fertilizer', 'others'].forEach((k) => {
+            acc.commodities[k].totalArea += (m.commodities[k]?.totalArea || 0);
+            acc.commodities[k].items = [...(acc.commodities[k].items || []), ...(m.commodities[k]?.items || [])];
+          });
           acc.pgs.accreditedGroups += m.pgs.accreditedGroups;
           acc.pgs.applyingForAccreditation += m.pgs.applyingForAccreditation;
+          acc.pgs.engagedOrganicFarming += m.pgs.engagedOrganicFarming;
           acc.pgs.certifiedFarmers += m.pgs.certifiedFarmers;
           acc.pgs.certifiedArea += m.pgs.certifiedArea;
           return acc;
@@ -115,7 +148,32 @@ export function useDashboardDataByProvince(province = null) {
         setLoading(false);
       }
     }
-    fetchData();
+
+    const indRef = collection(db, 'individuals');
+    const fcasRef = collection(db, 'fcas');
+    const indQuery = province ? query(indRef, where('province', '==', province)) : indRef;
+    const fcasQuery = province ? query(fcasRef, where('province', '==', province)) : fcasRef;
+
+    indUnsub = onSnapshot(indQuery, (snap) => {
+      indSnapData = snap;
+      processAndSet();
+    }, (err) => {
+      setError(err.message);
+      setLoading(false);
+    });
+
+    fcasUnsub = onSnapshot(fcasQuery, (snap) => {
+      fcasSnapData = snap;
+      processAndSet();
+    }, (err) => {
+      setError(err.message);
+      setLoading(false);
+    });
+
+    return () => {
+      indUnsub?.();
+      fcasUnsub?.();
+    };
   }, [province]);
 
   return { data, perProvince, loading, error };

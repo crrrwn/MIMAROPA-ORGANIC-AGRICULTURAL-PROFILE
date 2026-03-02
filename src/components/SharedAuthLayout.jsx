@@ -1,12 +1,14 @@
 export default function SharedAuthLayout({ children, title }) {
   return (
-    <div className="min-h-screen flex font-poppins bg-gradient-to-br from-oa-green/20 via-oa-cream to-oa-blue/20">
+    <div className="min-h-screen flex font-poppins bg-gradient-to-b from-gray-100 to-gray-50">
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <img src="/LOGO_OA.png" alt="OA Logo" className="h-20 w-20 mx-auto rounded-full object-cover shadow-lg" />
-            <h1 className="text-2xl font-bold text-oa-green-dark mt-4">MIMAROPA Organic Profile</h1>
-            <p className="text-oa-brown mt-2">{title}</p>
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border-2 border-gray-200 p-6 sm:p-8">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gray-50 border-2 border-gray-200 mb-4 overflow-hidden">
+              <img src="/LOGO_OA.png" alt="OA Logo" className="w-14 h-14 object-cover rounded-xl" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">MIMAROPA Organic Profile</h1>
+            <p className="text-gray-600 mt-1 font-medium">{title}</p>
           </div>
           {children}
         </div>

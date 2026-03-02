@@ -3,9 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { PROVINCES } from '../../constants';
+import { FileUpload } from '../../components/FileUpload';
 
 const SEX_OPTIONS = ['Male', 'Female'];
 const CIVIL_STATUS = ['Single', 'Married', 'Widowed', 'Separated', 'Solo Parent'];
@@ -33,6 +35,7 @@ const EMPTY_FORM = {
 
 export default function IndividualForm() {
   const { getProvince } = useAuth();
+  const { showNotification } = useNotification();
   const userProvince = getProvince();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -55,6 +58,7 @@ export default function IndividualForm() {
     yearsInOrganicFarming: '',
     organicArea: '',
     commodities: [{ commodity: '', products: '', sizeOfArea: '', annualVolume: '', pricePerUnit: '', certification: '' }],
+    attachments: [],
   });
 
   useEffect(() => {
@@ -88,6 +92,7 @@ export default function IndividualForm() {
                   certification: c.certification || '',
                 }))
               : [{ commodity: '', products: '', sizeOfArea: '', annualVolume: '', pricePerUnit: '', certification: '' }],
+            attachments: Array.isArray(d.attachments) ? d.attachments : [],
           });
         }
         setLoading(false);
@@ -125,16 +130,19 @@ export default function IndividualForm() {
       province: finalProvince,
       commodities: form.commodities,
       certification: form.certification,
+      attachments: form.attachments || [],
       updatedAt: new Date().toISOString(),
     };
     try {
       if (isEdit) {
         await updateDoc(doc(db, 'individuals', id), payload);
+        showNotification('Individual form updated successfully.');
       } else {
         await addDoc(collection(db, 'individuals'), {
           ...payload,
           createdAt: new Date().toISOString(),
         });
+        showNotification('Individual form submitted successfully.');
       }
       navigate('/dashboard');
     } catch (err) {
@@ -146,8 +154,15 @@ export default function IndividualForm() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-oa-green-dark mb-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition"
+        >
+          <Icon icon="mdi:arrow-left" className="text-lg" /> Back to Dashboard
+        </button>
+        <h1 className="text-2xl font-bold text-palette-brown mb-6">
           Form A: Organic Agriculture Profile Individual Form {isEdit && '(Edit)'}
         </h1>
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -195,7 +210,7 @@ export default function IndividualForm() {
 
           <Section title="6. Organic Commodities / Product">
             {form.commodities.map((c, idx) => (
-              <div key={idx} className="p-4 bg-oa-cream/50 rounded-lg mb-4 space-y-4">
+              <div key={idx} className="p-4 bg-palette-sky/20 rounded-lg mb-4 space-y-4 border border-palette-sky/40">
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-oa-green-dark">Commodity #{idx + 1}</span>
                   {form.commodities.length > 1 && (
@@ -214,16 +229,20 @@ export default function IndividualForm() {
                 </div>
               </div>
             ))}
-            <button type="button" onClick={addCommodity} className="flex items-center gap-2 text-oa-green font-medium">
+            <button type="button" onClick={addCommodity} className="flex items-center gap-2 text-palette-green font-medium">
               <Icon icon="mdi:plus" /> Add Commodity
             </button>
           </Section>
 
+          <Section title="7. Attachments / Documents">
+            <FileUpload value={form.attachments} onChange={(v) => update('attachments', v)} />
+          </Section>
+
           <div className="flex gap-4">
-            <button type="submit" disabled={loading} className="px-6 py-3 bg-oa-green hover:bg-oa-green-dark text-white rounded-lg font-medium disabled:opacity-50">
+            <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
               {loading ? 'Saving...' : isEdit ? 'Update' : 'Submit'}
             </button>
-            <button type="button" onClick={() => navigate('/dashboard')} className="px-6 py-3 border border-oa-brown/30 rounded-lg text-oa-brown">
+            <button type="button" onClick={() => navigate('/dashboard')} className="px-6 py-3 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition">
               Cancel
             </button>
           </div>
@@ -235,8 +254,8 @@ export default function IndividualForm() {
 
 function Section({ title, children }) {
   return (
-    <div>
-      <h2 className="text-lg font-semibold text-oa-green-dark mb-4">{title}</h2>
+    <div className="p-6 bg-white rounded-xl border border-palette-sky/40 shadow-sm">
+      <h2 className="text-base font-semibold text-palette-brown mb-4 pb-2 border-b border-palette-sky/50">{title}</h2>
       {children}
     </div>
   );
@@ -245,7 +264,7 @@ function Section({ title, children }) {
 function Input({ label, value, onChange, type = 'text', required, disabled, placeholder, step }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-oa-brown mb-1">{label}</label>
+      <label className="block text-sm font-medium text-palette-brown mb-1">{label}</label>
       <input
         type={type}
         value={value}
@@ -254,7 +273,7 @@ function Input({ label, value, onChange, type = 'text', required, disabled, plac
         disabled={disabled}
         placeholder={placeholder}
         step={step}
-        className="w-full px-4 py-2 border border-oa-green/40 rounded-lg focus:ring-2 focus:ring-oa-green disabled:bg-gray-100"
+        className="input-base disabled:bg-gray-50"
       />
     </div>
   );
@@ -263,14 +282,14 @@ function Input({ label, value, onChange, type = 'text', required, disabled, plac
 function Select({ label, value, onChange, options, required }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-oa-brown mb-1">{label}</label>
+      <label className="block text-sm font-medium text-palette-brown mb-1">{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
-        className="w-full px-4 py-2 border border-oa-green/40 rounded-lg focus:ring-2 focus:ring-oa-green"
+        className="input-base"
       >
-        <option value="">-- Select --</option>
+        <option value="">— Select —</option>
         {options.map((o) => (
           <option key={o} value={o}>{o}</option>
         ))}

@@ -44,7 +44,7 @@ export default function EncoderLogin() {
 
   return (
     <SharedAuthLayout title={`Provincial Encoder - ${decodeURIComponent(province || '')}`}>
-      <div className="bg-white rounded-2xl shadow-xl p-6 border border-oa-green/20">
+      <div>
         {showForgot ? (
           <>
             <h2 className="text-lg font-semibold text-oa-green-dark mb-4">Forgot Password</h2>

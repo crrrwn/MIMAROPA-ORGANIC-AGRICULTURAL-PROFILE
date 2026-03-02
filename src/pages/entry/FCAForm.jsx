@@ -3,11 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { PROVINCES } from '../../constants';
+import { FileUpload } from '../../components/FileUpload';
 
-const CERTIFICATION_OPTIONS = ['Devoted of Area', 'PGS', '3rd Party Certified'];
+const CERTIFICATION_OPTIONS = ['PGS Accredited', 'Applying for Accreditation', 'Engaged Organic Farming'];
 
 export default function FCAForm() {
   const { getProvince } = useAuth();
@@ -33,6 +35,7 @@ export default function FCAForm() {
     locationOfProductionArea: '',
     sharedFacilities: [{ area: '', typeOfFacilities: '', sizeOfArea: '', capacities: '', cost: '', noOfUnits: '', dedicatedToOrganic: 'No', remarks: '' }],
     machinery: [{ type: '', capacities: '', cost: '', noOfUnits: '', dedicatedToOrganic: 'No', remarks: '' }],
+    attachments: [],
   });
 
   useEffect(() => {
@@ -77,6 +80,7 @@ export default function FCAForm() {
                   remarks: m.remarks || '',
                 }))
               : [{ type: '', capacities: '', cost: '', noOfUnits: '', dedicatedToOrganic: 'No', remarks: '' }],
+            attachments: Array.isArray(d.attachments) ? d.attachments : [],
           });
         }
         setLoading(false);
@@ -121,16 +125,19 @@ export default function FCAForm() {
       ...form,
       province: province || form.province,
       engageInOA: true,
+      attachments: form.attachments || [],
       updatedAt: new Date().toISOString(),
     };
     try {
       if (isEdit) {
         await updateDoc(doc(db, 'fcas', id), payload);
+        showNotification('FCA form updated successfully.');
       } else {
         await addDoc(collection(db, 'fcas'), {
           ...payload,
           createdAt: new Date().toISOString(),
         });
+        showNotification('FCA form submitted successfully.');
       }
       navigate('/dashboard');
     } catch (err) {
@@ -143,7 +150,14 @@ export default function FCAForm() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-oa-green-dark mb-6">
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition"
+        >
+          <Icon icon="mdi:arrow-left" className="text-lg" /> Back to Dashboard
+        </button>
+        <h1 className="text-2xl font-bold text-palette-brown mb-6">
           Form B: Organic Agriculture Profile FCA Form {isEdit && '(Edit)'}
         </h1>
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -181,9 +195,9 @@ export default function FCAForm() {
 
           <Section title="IV. Shared Facilities and Capacities">
             {form.sharedFacilities.map((s, idx) => (
-              <div key={idx} className="p-4 bg-oa-cream/50 rounded-lg mb-4">
+              <div key={idx} className="p-4 bg-palette-sky/20 rounded-lg mb-4 border border-palette-sky/40">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="font-medium text-oa-green-dark">Facility #{idx + 1}</span>
+                  <span className="font-medium text-palette-brown">Facility #{idx + 1}</span>
                   {form.sharedFacilities.length > 1 && (
                     <button type="button" onClick={() => setForm((f) => ({ ...f, sharedFacilities: f.sharedFacilities.filter((_, i) => i !== idx) }))} className="text-red-600 text-sm">Remove</button>
                   )}
@@ -200,14 +214,14 @@ export default function FCAForm() {
                 </div>
               </div>
             ))}
-            <button type="button" onClick={addSharedFacility} className="flex items-center gap-2 text-oa-green font-medium"><Icon icon="mdi:plus" /> Add Facility</button>
+            <button type="button" onClick={addSharedFacility} className="flex items-center gap-2 text-palette-green font-medium"><Icon icon="mdi:plus" /> Add Facility</button>
           </Section>
 
           <Section title="V. Machinery, Equipment, and Other Components">
             {form.machinery.map((m, idx) => (
-              <div key={idx} className="p-4 bg-oa-cream/50 rounded-lg mb-4">
+              <div key={idx} className="p-4 bg-palette-sky/20 rounded-lg mb-4 border border-palette-sky/40">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="font-medium text-oa-green-dark">Item #{idx + 1}</span>
+                  <span className="font-medium text-palette-brown">Item #{idx + 1}</span>
                   {form.machinery.length > 1 && (
                     <button type="button" onClick={() => setForm((f) => ({ ...f, machinery: f.machinery.filter((_, i) => i !== idx) }))} className="text-red-600 text-sm">Remove</button>
                   )}
@@ -222,14 +236,18 @@ export default function FCAForm() {
                 </div>
               </div>
             ))}
-            <button type="button" onClick={addMachinery} className="flex items-center gap-2 text-oa-green font-medium"><Icon icon="mdi:plus" /> Add Machinery</button>
+            <button type="button" onClick={addMachinery} className="flex items-center gap-2 text-palette-green font-medium"><Icon icon="mdi:plus" /> Add Machinery</button>
+          </Section>
+
+          <Section title="VI. Attachments / Documents">
+            <FileUpload value={form.attachments} onChange={(v) => update('attachments', v)} />
           </Section>
 
           <div className="flex gap-4">
-            <button type="submit" disabled={loading} className="px-6 py-3 bg-oa-green hover:bg-oa-green-dark text-white rounded-lg font-medium disabled:opacity-50">
+            <button type="submit" disabled={loading} className="btn-primary disabled:opacity-50">
               {loading ? 'Saving...' : isEdit ? 'Update' : 'Submit'}
             </button>
-            <button type="button" onClick={() => navigate('/dashboard')} className="px-6 py-3 border border-oa-brown/30 rounded-lg text-oa-brown">Cancel</button>
+            <button type="button" onClick={() => navigate('/dashboard')} className="px-6 py-3 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition">Cancel</button>
           </div>
         </form>
       </div>
@@ -239,8 +257,8 @@ export default function FCAForm() {
 
 function Section({ title, children }) {
   return (
-    <div>
-      <h2 className="text-lg font-semibold text-oa-green-dark mb-4">{title}</h2>
+    <div className="p-6 bg-white rounded-xl border border-palette-sky/40 shadow-sm">
+      <h2 className="text-base font-semibold text-palette-brown mb-4 pb-2 border-b border-palette-sky/50">{title}</h2>
       {children}
     </div>
   );
@@ -249,8 +267,8 @@ function Section({ title, children }) {
 function Input({ label, value, onChange, type = 'text', required }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-oa-brown mb-1">{label}</label>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="w-full px-4 py-2 border border-oa-green/40 rounded-lg focus:ring-2 focus:ring-oa-green" />
+      <label className="block text-sm font-medium text-palette-brown mb-1">{label}</label>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="input-base" />
     </div>
   );
 }
@@ -258,9 +276,9 @@ function Input({ label, value, onChange, type = 'text', required }) {
 function Select({ label, value, onChange, options }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-oa-brown mb-1">{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-4 py-2 border border-oa-green/40 rounded-lg focus:ring-2 focus:ring-oa-green">
-        <option value="">-- Select --</option>
+      <label className="block text-sm font-medium text-palette-brown mb-1">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="input-base">
+        <option value="">— Select —</option>
         {options.map((o) => (
           <option key={o} value={o}>{o}</option>
         ))}

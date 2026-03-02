@@ -15,12 +15,12 @@ export default function SelectProvince() {
 
   return (
     <SharedAuthLayout title="Provincial Encoder - Select Province">
-      <div className="bg-white rounded-2xl shadow-xl p-6 border border-oa-green/20">
-        <label className="block text-sm font-medium text-oa-brown mb-2">Select your province</label>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Select your province</label>
         <select
           value={province}
           onChange={(e) => setProvince(e.target.value)}
-          className="w-full px-4 py-3 border border-oa-green/40 rounded-lg focus:ring-2 focus:ring-oa-green focus:border-transparent"
+          className="input-base"
         >
           <option value="">-- Choose Province --</option>
           {PROVINCES.map((p) => (
@@ -30,7 +30,7 @@ export default function SelectProvince() {
         <button
           onClick={handleContinue}
           disabled={!province}
-          className="mt-4 w-full py-3 bg-oa-blue hover:bg-oa-blue-dark disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
+          className="mt-4 w-full py-3 bg-oa-green hover:bg-oa-green-dark disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-medium shadow-sm transition-all flex items-center justify-center gap-2"
         >
           Continue
           <Icon icon="mdi:arrow-right" />

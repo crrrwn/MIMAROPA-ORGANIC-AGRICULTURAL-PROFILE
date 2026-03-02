@@ -42,7 +42,7 @@ export default function AdminRegister() {
 
   return (
     <SharedAuthLayout title="Admin Registration">
-      <div className="bg-white rounded-2xl shadow-xl p-6 border border-oa-green/20">
+      <div>
         <form onSubmit={handleSubmit}>
           <input
             type="email"

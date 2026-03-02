@@ -43,7 +43,7 @@ export default function AdminLogin() {
 
   return (
     <SharedAuthLayout title="Admin Login">
-      <div className="bg-white rounded-2xl shadow-xl p-6 border border-oa-green/20">
+      <div>
         {showForgot ? (
           <>
             <h2 className="text-lg font-semibold text-oa-green-dark mb-4">Forgot Password</h2>
@@ -76,7 +76,7 @@ export default function AdminLogin() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
-              className="w-full px-4 py-3 border border-oa-green/40 rounded-lg mb-4 focus:ring-2 focus:ring-oa-green"
+              className="input-base mb-4"
               required
             />
             <div className="mb-4">
