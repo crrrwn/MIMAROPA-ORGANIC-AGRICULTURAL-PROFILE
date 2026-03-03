@@ -41,7 +41,7 @@ export default function AdminRegister() {
   };
 
   return (
-    <SharedAuthLayout title="Admin Registration" backHref="/">
+    <SharedAuthLayout title="Admin Registration" backHref="/" backIconOnly>
       <div>
         <form onSubmit={handleSubmit}>
           <input

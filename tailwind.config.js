@@ -52,7 +52,7 @@ export default {
       },
       keyframes: {
         'fade-in-up': {
-          '0%': { opacity: '0', transform: 'translateY(24px)' },
+          '0%': { opacity: '0', transform: 'translateY(32px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'fade-in': {
@@ -65,29 +65,40 @@ export default {
         },
         'card-float': {
           '0%, 100%': { transform: 'translateY(0) scale(1)' },
-          '50%': { transform: 'translateY(-8px) scale(1.02)' },
+          '50%': { transform: 'translateY(-10px) scale(1.02)' },
         },
         'text-float': {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-3px)' },
         },
         'text-fade-in-up': {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '0%': { opacity: '0', transform: 'translateY(24px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'shimmer': {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
+        'shake': {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
+          '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' },
+        },
+        'fade-in-scale': {
+          '0%': { opacity: '0', transform: 'scale(0.96) translateY(8px)' },
+          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+        },
       },
       animation: {
-        'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
+        'fade-in-up': 'fade-in-up 1s ease-out forwards',
         'fade-in': 'fade-in 0.5s ease-out forwards',
-        'float': 'float 3s ease-in-out infinite',
-        'card-float': 'card-float 4s ease-in-out infinite',
+        'float': 'float 3.5s ease-in-out infinite',
+        'card-float': 'card-float 5s ease-in-out infinite',
         'text-float': 'text-float 3s ease-in-out infinite',
-        'text-fade-in-up': 'text-fade-in-up 0.6s ease-out forwards',
+        'text-fade-in-up': 'text-fade-in-up 0.9s ease-out forwards',
         'shimmer': 'shimmer 3s ease-in-out infinite',
+        'shake': 'shake 0.5s ease-in-out',
+        'fade-in-scale': 'fade-in-scale 0.35s ease-out forwards',
       },
     },
   },

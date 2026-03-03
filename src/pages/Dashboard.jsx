@@ -1,4 +1,5 @@
 import { useState, Fragment } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -24,7 +25,17 @@ import { useDashboardDataByProvince } from '../hooks/useDashboardDataByProvince'
 import { useFormEntries } from '../hooks/useFormEntries';
 import { PROVINCES } from '../constants';
 
-const COLORS = ['#6B8E23', '#1565C0', '#5D4037', '#B3E5FC', '#546E7A', '#8BC34A'];
+const COLORS = ['#84C444', '#1E78D1', '#8D5A38', '#A3D2EA', '#346A8E', '#F4F8EB'];
+const CHART_GRID = '#E0EDF5';
+const CHART_AXIS = '#5D4037';
+const tooltipStyle = {
+  borderRadius: 12,
+  padding: '10px 14px',
+  border: '2px solid #B3E5FC',
+  boxShadow: '0 4px 14px rgba(0,0,0,0.1)',
+  backgroundColor: '#FFF8E1',
+};
+const PAGE_SIZE = 20;
 
 export default function Dashboard() {
   const { isAdmin, getProvince } = useAuth();
@@ -32,16 +43,48 @@ export default function Dashboard() {
   const [selectedProvince, setSelectedProvince] = useState(isAdmin() ? null : getProvince());
   const province = isAdmin() ? selectedProvince : getProvince();
   const { data, perProvince, loading, error } = useDashboardDataByProvince(province);
-  const { individuals, fcas, loading: entriesLoading, refresh } = useFormEntries(province);
+  const { individuals, fcas, refresh } = useFormEntries(province);
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [formTab, setFormTab] = useState('individual');
   const [expandedId, setExpandedId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null, type: null });
   const [commodityBreakdown, setCommodityBreakdown] = useState(null);
+  const [individualPage, setIndividualPage] = useState(1);
+  const [fcaPage, setFcaPage] = useState(1);
+
+  const totalIndividualPages = Math.max(1, Math.ceil(individuals.length / PAGE_SIZE));
+  const totalFcaPages = Math.max(1, Math.ceil(fcas.length / PAGE_SIZE));
+  const safeIndividualPage = Math.min(individualPage, totalIndividualPages);
+  const safeFcaPage = Math.min(fcaPage, totalFcaPages);
+  const individualStart = (safeIndividualPage - 1) * PAGE_SIZE;
+  const fcaStart = (safeFcaPage - 1) * PAGE_SIZE;
+  const paginatedIndividuals = individuals.slice(individualStart, individualStart + PAGE_SIZE);
+  const paginatedFcas = fcas.slice(fcaStart, fcaStart + PAGE_SIZE);
+
+  const handlePrevIndividuals = () => {
+    setIndividualPage((p) => Math.max(1, p - 1));
+  };
+
+  const handleNextIndividuals = () => {
+    setIndividualPage((p) => Math.min(totalIndividualPages, p + 1));
+  };
+
+  const handlePrevFcas = () => {
+    setFcaPage((p) => Math.max(1, p - 1));
+  };
+
+  const handleNextFcas = () => {
+    setFcaPage((p) => Math.min(totalFcaPages, p + 1));
+  };
 
   const handleTabSwitch = (tab) => {
     setFormTab(tab);
     setExpandedId(null);
+    if (tab === 'individual') {
+      setIndividualPage(1);
+    } else {
+      setFcaPage(1);
+    }
   };
 
   const handleDelete = async () => {
@@ -65,40 +108,41 @@ export default function Dashboard() {
     { name: 'Others', key: 'others', value: data.commodities?.others?.totalArea ?? 0 },
   ].filter((d) => d.value > 0);
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Icon icon="mdi:loading" className="text-4xl text-oa-green animate-spin" />
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <div className="space-y-8">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-              Dashboard {province ? `— ${province}` : '(All Provinces)'}
-            </h1>
+        {/* Welcome / Header strip */}
+        <div className="relative rounded-2xl bg-gradient-to-r from-palette-cream via-palette-cream/95 to-palette-sky/30 border border-palette-sky/30 shadow-lg overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 sm:p-6">
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex w-11 h-11 rounded-xl bg-gradient-to-br from-palette-green/25 to-palette-green/10 border border-palette-green/30 items-center justify-center">
+                <Icon icon="mdi:view-dashboard" className="text-xl text-palette-green" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-palette-brown tracking-tight">
+                  Dashboard {province ? `— ${province}` : '(All Provinces)'}
+                </h1>
+                <p className="text-sm text-palette-slate mt-1">Organic Agriculture profile overview</p>
+              </div>
+            </div>
             {!isAdmin() && (
-            <button
-              onClick={() => setShowEntryModal(true)}
-              className="btn-primary"
-            >
-              <Icon icon="mdi:plus-circle" className="text-xl" />
-              New Entry
-            </button>
-          )}
+              <button
+                onClick={() => setShowEntryModal(true)}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-palette-green text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl border-2 border-palette-green/80 hover:bg-palette-green/90"
+              >
+                <Icon icon="mdi:plus-circle" className="text-lg" />
+                New Entry
+              </button>
+            )}
           </div>
+        </div>
 
-          {isAdmin() && (
-            <div className="flex flex-wrap gap-2 p-1 bg-gray-200 rounded-xl w-fit">
+        {isAdmin() && (
+            <div className="flex flex-wrap gap-2 p-2 bg-white/80 rounded-2xl w-fit border-2 border-palette-sky/30 shadow-md">
               <button
                 onClick={() => setSelectedProvince(null)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedProvince === null ? 'bg-white text-oa-green shadow-sm border border-gray-200' : 'text-gray-700 hover:text-gray-900'}`}
+                className={`px-4 py-2.5 rounded-xl text-sm font-semibold ${selectedProvince === null ? 'bg-palette-green text-white shadow-md' : 'text-palette-slate hover:text-palette-brown hover:bg-palette-cream/60'}`}
               >
                 All Provinces
               </button>
@@ -106,194 +150,234 @@ export default function Dashboard() {
                 <button
                   key={p}
                   onClick={() => setSelectedProvince(p)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedProvince === p ? 'bg-white text-oa-green shadow-sm border border-gray-200' : 'text-gray-700 hover:text-gray-900'}`}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-semibold ${selectedProvince === p ? 'bg-palette-green text-white shadow-md' : 'text-palette-slate hover:text-palette-brown hover:bg-palette-cream/60'}`}
                 >
                   {p}
                 </button>
               ))}
             </div>
           )}
-        </div>
 
-        {deleteConfirm.show && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-elevated p-6 max-w-sm w-full border border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Delete Form</h2>
-            <p className="text-gray-600 mb-6">Are you sure you want to delete this form? This action cannot be undone.</p>
+        {deleteConfirm.show && createPortal(
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ top: 0, left: 0, right: 0, bottom: 0 }}>
+            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full border-2 border-red-200" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                  <Icon icon="mdi:delete-alert" className="text-lg text-red-600" />
+                </div>
+                <h2 className="text-lg font-bold text-palette-brown">Delete Form</h2>
+              </div>
+              <p className="text-palette-slate mb-6">Are you sure you want to delete this form? This action cannot be undone.</p>
               <div className="flex gap-3">
                 <button
                   onClick={handleDelete}
-                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
+                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold"
                 >
                   Delete
                 </button>
                 <button
                   onClick={() => setDeleteConfirm({ show: false, id: null, type: null })}
-                  className="flex-1 py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition"
+                  className="flex-1 py-2.5 border-2 border-palette-sky/50 rounded-xl text-palette-brown font-medium hover:bg-palette-cream/50"
                 >
                   Cancel
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
-        {showEntryModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-elevated p-6 max-w-sm w-full border border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Form</h2>
-              <div className="space-y-3">
+        {showEntryModal && createPortal(
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ top: 0, left: 0, right: 0, bottom: 0 }}>
+            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full border-2 border-palette-sky/40" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-palette-green/20 flex items-center justify-center border border-palette-green/30">
+                  <Icon icon="mdi:plus-box-multiple" className="text-lg text-palette-green" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-palette-brown">Select Form</h2>
+                  <p className="text-sm text-palette-slate">Choose a form type to encode</p>
+                </div>
+              </div>
+              <div className="space-y-3 mt-4">
                 <Link
                   to="/entry/individual"
-                  className="block w-full py-3 px-4 bg-oa-green hover:bg-oa-green-dark rounded-xl font-medium text-white transition text-center"
+                  className="flex items-center justify-center gap-2 w-full py-3.5 px-4 bg-palette-green text-white rounded-xl font-semibold hover:bg-palette-green/90 shadow-md border-2 border-palette-green/80"
                 >
+                  <Icon icon="mdi:account-edit" className="text-lg" />
                   Individual OA Profile
                 </Link>
                 <Link
                   to="/entry/fca"
-                  className="block w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium text-gray-800 transition text-center"
+                  className="flex items-center justify-center gap-2 w-full py-3.5 px-4 bg-palette-cream border-2 border-palette-sky/50 text-palette-brown rounded-xl font-semibold hover:bg-palette-sky/20"
                 >
+                  <Icon icon="mdi:account-group" className="text-lg" />
                   FCA Form
                 </Link>
               </div>
-              <button onClick={() => setShowEntryModal(false)} className="mt-4 w-full py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition">
+              <button onClick={() => setShowEntryModal(false)} className="mt-4 w-full py-2.5 border-2 border-palette-sky/50 rounded-xl text-palette-brown font-medium hover:bg-palette-cream/50">
                 Cancel
               </button>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {error && (
-          <div className="p-4 bg-red-50 text-red-700 rounded-lg">
-            {error} - Make sure Firestore rules allow read access for authenticated users.
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-2">
+            <Icon icon="mdi:alert-circle" className="text-xl shrink-0" />
+            {error} — Make sure Firestore rules allow read access for authenticated users.
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <MetricCard
-            title="Total Devoted OA Area (ha)"
-            value={data.oaArea.totalDevoted.toFixed(2)}
-            icon="mdi:map-marker-radius"
-          />
-          <MetricCard
-            title="Total PGS Certified Area (ha)"
-            value={data.oaArea.totalPGSCertified.toFixed(2)}
-            icon="mdi:certificate"
-          />
-          <MetricCard
-            title="Total 3rd Party Area (ha)"
-            value={data.oaArea.total3rdParty.toFixed(2)}
-            icon="mdi:badge-account"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+          <MetricCard title="Total Devoted OA Area (ha)" value={data.oaArea.totalDevoted.toFixed(2)} />
+          <MetricCard title="Total PGS Certified Area (ha)" value={data.oaArea.totalPGSCertified.toFixed(2)} />
+          <MetricCard title="Total 3rd Party Area (ha)" value={data.oaArea.total3rdParty.toFixed(2)} />
           <MetricCard
             title="Total Certified Farmers"
             value={Number(data.practitioners?.totalPGSCertified ?? 0) + Number(data.practitioners?.total3rdParty ?? 0)}
-            icon="mdi:account-check"
           />
-          <MetricCard
-            title="FCAs Engage in OA"
-            value={data.fcas.engageInOA}
-            icon="mdi:account-group"
-          />
+          <MetricCard title="FCAs Engage in OA" value={data.fcas.engageInOA} />
         </div>
 
-        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-md p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">OA Practitioners</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <MetricCard title="Devoted Farmers" value={data.practitioners.totalDevoted} icon="mdi:account" />
-            <MetricCard title="PGS Certified" value={data.practitioners.totalPGSCertified} icon="mdi:certificate" />
-            <MetricCard title="3rd Party Certified" value={data.practitioners.total3rdParty} icon="mdi:badge-account" />
+        <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-xl p-6 border-l-4 border-l-palette-green">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-palette-green/20 to-palette-sky/20 flex items-center justify-center border border-palette-sky/30">
+                <Icon icon="mdi:account-group" className="text-lg text-palette-blue" />
+              </div>
+              <h3 className="font-bold text-palette-brown text-lg">OA Practitioners</h3>
+            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <MetricCard title="Devoted Farmers" value={data.practitioners.totalDevoted} />
+            <MetricCard title="PGS Certified" value={data.practitioners.totalPGSCertified} />
+            <MetricCard title="3rd Party Certified" value={data.practitioners.total3rdParty} />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-md p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">OA Area by Certification</h3>
+        <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-lg p-6 border-l-4 border-l-palette-blue">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-palette-blue/10 flex items-center justify-center border border-palette-sky/30">
+              <Icon icon="mdi:certificate" className="text-lg text-palette-blue" />
+            </div>
+            <h3 className="font-bold text-palette-brown text-lg">OA Area by Certification</h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <MetricCard title="Devoted OA Area (ha)" value={data.oaArea.totalDevoted.toFixed(2)} icon="mdi:map-marker-radius" />
-            <MetricCard title="PGS Certified (ha)" value={data.oaArea.totalPGSCertified.toFixed(2)} icon="mdi:certificate" />
-            <MetricCard title="3rd Party (ha)" value={data.oaArea.total3rdParty.toFixed(2)} icon="mdi:badge-account" />
+            <MetricCard title="Devoted OA Area (ha)" value={data.oaArea.totalDevoted.toFixed(2)} />
+            <MetricCard title="PGS Certified (ha)" value={data.oaArea.totalPGSCertified.toFixed(2)} />
+            <MetricCard title="3rd Party (ha)" value={data.oaArea.total3rdParty.toFixed(2)} />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-md p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Commodities — Total Area (ha)</h3>
+        <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-lg p-6 border-l-4 border-l-palette-brown">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-palette-brown/10 flex items-center justify-center border border-palette-sky/30">
+              <Icon icon="mdi:chart-pie" className="text-lg text-palette-brown" />
+            </div>
+            <h3 className="font-bold text-palette-brown text-lg">Commodities — Total Area (ha)</h3>
+          </div>
           {commoditiesData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={commoditiesData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={90}
-                  paddingAngle={2}
-                  dataKey="value"
-                  nameKey="name"
-                  label={({ name, value }) => `${name}: ${Number(value).toFixed(2)} ha`}
-                  onClick={(entry) => {
-                    const items = data.commodities?.[entry.key]?.items || [];
-                    if (items.length > 0) setCommodityBreakdown({ name: entry.name, items });
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {commoditiesData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v) => [`${Number(v).toFixed(2)} ha`, 'Total Area']} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="rounded-xl bg-gradient-to-b from-palette-cream/40 to-palette-sky/20 p-4 border border-palette-sky/30">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                  <Pie
+                    data={commoditiesData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={56}
+                    outerRadius={96}
+                    paddingAngle={3}
+                    dataKey="value"
+                    nameKey="name"
+                    stroke="#fff"
+                    strokeWidth={2}
+                    label={({ name, value }) => `${name}: ${Number(value).toFixed(2)} ha`}
+                    labelLine={{ stroke: CHART_AXIS, strokeWidth: 1 }}
+                    onClick={(entry) => {
+                      const items = data.commodities?.[entry.key]?.items || [];
+                      if (items.length > 0) setCommodityBreakdown({ name: entry.name, items });
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {commoditiesData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} strokeWidth={2} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(v) => [`${Number(v).toFixed(2)} ha`, 'Total Area']}
+                    contentStyle={tooltipStyle}
+                    itemStyle={{ color: CHART_AXIS, fontWeight: 600 }}
+                    labelStyle={{ color: CHART_AXIS, fontWeight: 600 }}
+                  />
+                  <Legend
+                    wrapperStyle={{ paddingTop: 8 }}
+                    iconType="circle"
+                    iconSize={10}
+                    formatter={(value) => <span style={{ color: CHART_AXIS, fontSize: 12, fontWeight: 500 }}>{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
-            <p className="text-gray-600 text-center py-8">No commodity data yet</p>
+            <p className="text-palette-slate text-center py-8">No commodity data yet</p>
           )}
-          <p className="text-xs text-gray-600 mt-2">Click on a segment to view breakdown</p>
+          <p className="text-xs text-palette-slate mt-2">Click on a segment to view breakdown</p>
         </div>
 
         {commodityBreakdown && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setCommodityBreakdown(null)}>
-            <div className="bg-white rounded-2xl shadow-elevated p-6 max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col border border-gray-100" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Breakdown: {commodityBreakdown.name}</h2>
-              <div className="overflow-y-auto flex-1">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={() => setCommodityBreakdown(null)}>
+            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col border-2 border-palette-sky/40" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-palette-green/20 flex items-center justify-center border border-palette-green/30">
+                  <Icon icon="mdi:chart-box-outline" className="text-lg text-palette-green" />
+                </div>
+                <h2 className="text-lg font-bold text-palette-brown">Breakdown: {commodityBreakdown.name}</h2>
+              </div>
+              <div className="overflow-y-auto flex-1 rounded-lg border border-palette-sky/20">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-oa-green/20">
-                      <th className="text-left py-2 px-2">Name</th>
-                      <th className="text-left py-2 px-2">Products</th>
-                      <th className="text-left py-2 px-2">Area (ha)</th>
-                      <th className="text-left py-2 px-2">Volume (kg)</th>
+                    <tr className="border-b border-palette-sky/30 bg-palette-cream/50">
+                      <th className="text-left py-3 px-3 text-palette-brown font-semibold">Name</th>
+                      <th className="text-left py-3 px-3 text-palette-brown font-semibold">Products</th>
+                      <th className="text-left py-3 px-3 text-palette-brown font-semibold">Area (ha)</th>
+                      <th className="text-left py-3 px-3 text-palette-brown font-semibold">Volume (kg)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {commodityBreakdown.items.map((item, i) => (
-                      <tr key={i} className="border-b border-oa-green/10">
-                        <td className="py-2 px-2">{item.name}</td>
-                        <td className="py-2 px-2">{item.products}</td>
-                        <td className="py-2 px-2">{Number(item.area || 0).toFixed(2)}</td>
-                        <td className="py-2 px-2">{Number(item.volume || 0).toLocaleString()}</td>
+                      <tr key={i} className="border-b border-palette-sky/10 hover:bg-palette-cream/30">
+                        <td className="py-2.5 px-3 text-palette-brown">{item.name}</td>
+                        <td className="py-2.5 px-3 text-palette-slate">{item.products}</td>
+                        <td className="py-2.5 px-3 text-palette-brown">{Number(item.area || 0).toFixed(2)}</td>
+                        <td className="py-2.5 px-3 text-palette-slate">{Number(item.volume || 0).toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <button onClick={() => setCommodityBreakdown(null)} className="mt-4 py-2 px-4 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 font-medium self-end transition">Close</button>
+              <button onClick={() => setCommodityBreakdown(null)} className="mt-4 py-2.5 px-4 border-2 border-palette-sky/50 rounded-xl text-palette-brown font-medium hover:bg-palette-cream/50 self-end">Close</button>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <MetricCard title="PGS Accredited Groups" value={data.pgs.accreditedGroups} icon="mdi:shield-check" />
-          <MetricCard title="PGS Applying" value={data.pgs.applyingForAccreditation} icon="mdi:clock-outline" />
-          <MetricCard title="Engaged Organic Farming" value={data.pgs.engagedOrganicFarming ?? 0} icon="mdi:leaf" />
-          <MetricCard title="PGS Certified Farmers" value={data.pgs.certifiedFarmers} icon="mdi:account-check" />
-          <MetricCard title="PGS Certified Area (ha)" value={data.pgs.certifiedArea.toFixed(2)} icon="mdi:earth" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+          <MetricCard title="PGS Accredited Groups" value={data.pgs.accreditedGroups} />
+          <MetricCard title="PGS Applying" value={data.pgs.applyingForAccreditation} />
+          <MetricCard title="Engaged Organic Farming" value={data.pgs.engagedOrganicFarming ?? 0} />
+          <MetricCard title="PGS Certified Farmers" value={data.pgs.certifiedFarmers} />
+          <MetricCard title="PGS Certified Area (ha)" value={data.pgs.certifiedArea.toFixed(2)} />
         </div>
 
         {isAdmin() && selectedProvince === null && Object.keys(perProvince).length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border-2 border-gray-200 shadow-md p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">OA Area (ha) by Province</h3>
-              <ResponsiveContainer width="100%" height={280}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-lg p-4 sm:p-5 border-l-4 border-l-palette-blue">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-palette-blue/10 flex items-center justify-center border border-palette-sky/30">
+                  <Icon icon="mdi:chart-bar" className="text-lg text-palette-blue" />
+                </div>
+                <h3 className="font-bold text-palette-brown text-lg">OA Area (ha) by Province</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={340}>
                 <BarChart
                   data={PROVINCES.map((p) => {
                     const m = perProvince[p];
@@ -304,22 +388,44 @@ export default function Dashboard() {
                       '3rd Party': m?.oaArea?.total3rdParty ?? 0,
                     };
                   })}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                  margin={{ top: 24, right: 24, left: 16, bottom: 64 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                  <XAxis dataKey="province" angle={-25} textAnchor="end" height={60} tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v) => [`${Number(v).toFixed(2)} ha`, '']} />
-                  <Legend />
-                  <Bar dataKey="Devoted" stackId="a" fill={COLORS[0]} name="Devoted (ha)" />
-                  <Bar dataKey="PGS Certified" stackId="a" fill={COLORS[1]} name="PGS Certified (ha)" />
-                  <Bar dataKey="3rd Party" stackId="a" fill={COLORS[2]} name="3rd Party (ha)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+                  <XAxis
+                    dataKey="province"
+                    angle={-25}
+                    textAnchor="end"
+                    height={64}
+                    tick={{ fontSize: 12, fill: CHART_AXIS, fontWeight: 500 }}
+                    axisLine={{ stroke: CHART_AXIS, strokeWidth: 1 }}
+                    tickLine={{ stroke: CHART_AXIS }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: CHART_AXIS }}
+                    axisLine={{ stroke: CHART_AXIS }}
+                    tickLine={{ stroke: CHART_AXIS }}
+                    tickFormatter={(v) => (v >= 1000 ? `${v / 1000}k` : v)}
+                  />
+                  <Tooltip
+                    formatter={(v) => [`${Number(v).toFixed(2)} ha`, '']}
+                    contentStyle={tooltipStyle}
+                    labelStyle={{ color: CHART_AXIS, fontWeight: 600 }}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: 8 }} iconType="square" iconSize={12} formatter={(value) => <span style={{ color: CHART_AXIS, fontSize: 12, fontWeight: 500 }}>{value}</span>} />
+                  <Bar dataKey="Devoted" stackId="a" fill={COLORS[0]} name="Devoted (ha)" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="PGS Certified" stackId="a" fill={COLORS[1]} name="PGS Certified (ha)" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="3rd Party" stackId="a" fill={COLORS[2]} name="3rd Party (ha)" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-white rounded-xl border-2 border-gray-200 shadow-md p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Practitioners by Province</h3>
-              <ResponsiveContainer width="100%" height={280}>
+            <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-lg p-4 sm:p-5 border-l-4 border-l-palette-green">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-palette-green/10 flex items-center justify-center border border-palette-sky/30">
+                  <Icon icon="mdi:chart-bar" className="text-lg text-palette-blue" />
+                </div>
+                <h3 className="font-bold text-palette-brown text-lg">Practitioners by Province</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={340}>
                 <BarChart
                   data={PROVINCES.map((p) => {
                     const m = perProvince[p];
@@ -330,89 +436,114 @@ export default function Dashboard() {
                       '3rd Party': m?.practitioners?.total3rdParty ?? 0,
                     };
                   })}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                  margin={{ top: 24, right: 24, left: 16, bottom: 64 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                  <XAxis dataKey="province" angle={-25} textAnchor="end" height={60} tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Devoted" stackId="b" fill={COLORS[0]} name="Devoted" />
-                  <Bar dataKey="PGS Certified" stackId="b" fill={COLORS[1]} name="PGS Certified" />
-                  <Bar dataKey="3rd Party" stackId="b" fill={COLORS[2]} name="3rd Party" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
+                  <XAxis
+                    dataKey="province"
+                    angle={-25}
+                    textAnchor="end"
+                    height={64}
+                    tick={{ fontSize: 12, fill: CHART_AXIS, fontWeight: 500 }}
+                    axisLine={{ stroke: CHART_AXIS, strokeWidth: 1 }}
+                    tickLine={{ stroke: CHART_AXIS }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: CHART_AXIS }}
+                    axisLine={{ stroke: CHART_AXIS }}
+                    tickLine={{ stroke: CHART_AXIS }}
+                    tickFormatter={(v) => (v >= 1000 ? `${v / 1000}k` : v)}
+                  />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    labelStyle={{ color: CHART_AXIS, fontWeight: 600 }}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: 8 }} iconType="square" iconSize={12} formatter={(value) => <span style={{ color: CHART_AXIS, fontSize: 12, fontWeight: 500 }}>{value}</span>} />
+                  <Bar dataKey="Devoted" stackId="b" fill={COLORS[0]} name="Devoted" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="PGS Certified" stackId="b" fill={COLORS[1]} name="PGS Certified" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="3rd Party" stackId="b" fill={COLORS[2]} name="3rd Party" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
         )}
 
-        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-md p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Icon icon="mdi:file-document-multiple" />
-              {isAdmin() ? 'Encoded Forms (from Provincial Encoders)' : 'My Encoded Forms'}
-            </h3>
-            <div className="flex gap-2 mb-4 p-1 bg-gray-200 rounded-lg w-fit">
+        <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-xl p-6 border-l-4 border-l-palette-slate">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-palette-blue/20 to-palette-sky/20 flex items-center justify-center border border-palette-sky/30">
+                <Icon icon="mdi:file-document-multiple" className="text-lg text-palette-blue" />
+              </div>
+              <h3 className="font-bold text-palette-brown text-lg">
+                {isAdmin() ? 'Encoded Forms (from Provincial Encoders)' : 'My Encoded Forms'}
+              </h3>
+            </div>
+            <div className="flex gap-2 mb-5 p-2 bg-palette-cream/50 rounded-2xl w-fit border-2 border-palette-sky/30">
               <button
                 onClick={() => handleTabSwitch('individual')}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${formTab === 'individual' ? 'bg-white text-oa-green shadow-sm border border-gray-200' : 'text-gray-700 hover:text-gray-900'}`}
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 ${formTab === 'individual' ? 'bg-palette-green text-white shadow-md' : 'text-palette-slate hover:text-palette-brown hover:bg-white/80'}`}
               >
-                Individual Forms ({individuals.length})
+                <Icon icon="mdi:account" className="text-base" />
+                Individual ({individuals.length})
               </button>
               <button
                 onClick={() => handleTabSwitch('fca')}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${formTab === 'fca' ? 'bg-white text-oa-green shadow-sm border border-gray-200' : 'text-gray-700 hover:text-gray-900'}`}
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 ${formTab === 'fca' ? 'bg-palette-green text-white shadow-md' : 'text-palette-slate hover:text-palette-brown hover:bg-white/80'}`}
               >
-                FCA Forms ({fcas.length})
+                <Icon icon="mdi:account-group" className="text-base" />
+                FCA ({fcas.length})
               </button>
             </div>
-            {entriesLoading ? (
-              <div className="py-8 text-center text-gray-600">
-                <Icon icon="mdi:loading" className="text-2xl animate-spin mx-auto" />
-              </div>
-            ) : formTab === 'individual' ? (
-              <div className="overflow-x-auto">
+            {formTab === 'individual' ? (
+              <div className="overflow-x-auto rounded-2xl border-2 border-palette-sky/20 shadow-inner bg-white/50">
                 {individuals.length === 0 ? (
-                  <p className="text-gray-600 py-8 text-center">No Individual forms encoded yet</p>
+                  <div className="py-16 px-6 text-center">
+                    <div className="inline-flex w-12 h-12 rounded-xl bg-gradient-to-br from-palette-sky/30 to-palette-sky/10 items-center justify-center mb-4 border border-palette-sky/30">
+                      <Icon icon="mdi:file-document-outline" className="text-2xl text-palette-slate" />
+                    </div>
+                    <p className="text-palette-brown font-semibold text-lg">No Individual forms yet</p>
+                    <p className="text-sm text-palette-slate mt-1">Click <strong>New Entry</strong> above to add one</p>
+                  </div>
                 ) : (
+                  <>
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Province</th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Certification</th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Organic Area</th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                      <tr className="border-b-2 border-palette-sky/40 bg-gradient-to-r from-palette-cream/70 to-palette-sky/20">
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Name</th>
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Province</th>
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Certification</th>
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Organic Area</th>
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Date</th>
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {individuals.map((row) => (
+                      {paginatedIndividuals.map((row) => (
                         <Fragment key={row.id}>
-                          <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                            <td className="py-3 px-2">{row.completeName || [row.surname, row.firstName].filter(Boolean).join(' ')}</td>
-                            <td className="py-3 px-2">{row.province}</td>
-                            <td className="py-3 px-2">{row.certification}</td>
-                            <td className="py-3 px-2">{row.organicArea} ha</td>
-                            <td className="py-3 px-2">{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}</td>
-                            <td className="py-3 px-2">
-                              <div className="flex flex-wrap gap-2 items-center">
+                          <tr className="border-b border-palette-sky/15 hover:bg-palette-cream/40">
+                            <td className="py-3.5 px-4 font-medium text-palette-brown">{row.completeName || [row.surname, row.firstName].filter(Boolean).join(' ')}</td>
+                            <td className="py-3.5 px-4 text-palette-slate">{row.province}</td>
+                            <td className="py-3.5 px-4 text-palette-slate">{row.certification}</td>
+                            <td className="py-3.5 px-4 text-palette-brown">{row.organicArea} ha</td>
+                            <td className="py-3.5 px-4 text-palette-slate">{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '—'}</td>
+                            <td className="py-3.5 px-4">
+                              <div className="flex flex-wrap gap-1 items-center">
                                 <button
                                   onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
                                   title={expandedId === row.id ? 'Hide' : 'View'}
-                                  className="p-2 rounded-lg text-oa-green hover:bg-oa-green/10 transition"
+                                  className="p-2.5 rounded-xl text-palette-green hover:bg-palette-green/15 border border-transparent hover:border-palette-green/30"
                                 >
-                                  <Icon icon={expandedId === row.id ? 'mdi:eye-off' : 'mdi:eye'} className="text-lg" />
+                                  <Icon icon={expandedId === row.id ? 'mdi:eye-off' : 'mdi:eye'} className="text-base" />
                                 </button>
-                                <Link to={`/entry/individual/${row.id}/edit`} title="Edit" className="p-2 rounded-lg text-oa-blue hover:bg-oa-blue/10 transition inline-flex">
-                                  <Icon icon="mdi:pencil" className="text-lg" />
+                                <Link to={`/entry/individual/${row.id}/edit`} title="Edit" className="p-2.5 rounded-xl text-palette-blue hover:bg-palette-blue/15 border border-transparent hover:border-palette-blue/30 inline-flex">
+                                  <Icon icon="mdi:pencil" className="text-base" />
                                 </Link>
                                 {isAdmin() && (
                                   <button
                                     onClick={() => setDeleteConfirm({ show: true, id: row.id, type: 'individuals' })}
                                     title="Delete"
-                                    className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition"
+                                    className="p-2.5 rounded-xl text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200"
                                   >
-                                    <Icon icon="mdi:delete" className="text-lg" />
+                                    <Icon icon="mdi:delete" className="text-base" />
                                   </button>
                                 )}
                               </div>
@@ -420,7 +551,7 @@ export default function Dashboard() {
                           </tr>
                           {expandedId === row.id && (
                             <tr key={`${row.id}-detail`}>
-                              <td colSpan={6} className="bg-gray-50 p-4">
+                              <td colSpan={6} className="bg-palette-cream/50 p-5 border-b-2 border-palette-sky/20">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                                   <p><strong>Sex:</strong> {row.sex}</p>
                                   <p><strong>DOB:</strong> {row.dateOfBirth}</p>
@@ -453,52 +584,86 @@ export default function Dashboard() {
                       ))}
                     </tbody>
                   </table>
+                  {individuals.length > PAGE_SIZE && (
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 text-xs text-palette-slate gap-2 border-t border-palette-sky/20">
+                      <span>
+                        {`Showing ${individualStart + 1}-${Math.min(individualStart + PAGE_SIZE, individuals.length)} of ${individuals.length} Individual forms`}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handlePrevIndividuals}
+                          disabled={safeIndividualPage === 1}
+                          className="px-3 py-1.5 rounded-lg border text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed border-palette-sky/40 hover:bg-palette-cream/40"
+                        >
+                          Previous
+                        </button>
+                        <span className="text-[11px]">
+                          Page {safeIndividualPage} of {totalIndividualPages}
+                        </span>
+                        <button
+                          onClick={handleNextIndividuals}
+                          disabled={safeIndividualPage === totalIndividualPages}
+                          className="px-3 py-1.5 rounded-lg border text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed border-palette-sky/40 hover:bg-palette-cream/40"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  </>
                 )}
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-2xl border-2 border-palette-sky/20 shadow-inner bg-white/50">
                 {fcas.length === 0 ? (
-                  <p className="text-gray-600 py-8 text-center">No FCA forms encoded yet</p>
+                  <div className="py-16 px-6 text-center">
+                    <div className="inline-flex w-12 h-12 rounded-xl bg-gradient-to-br from-palette-sky/30 to-palette-sky/10 items-center justify-center mb-4 border border-palette-sky/30">
+                      <Icon icon="mdi:account-group-outline" className="text-2xl text-palette-slate" />
+                    </div>
+                    <p className="text-palette-brown font-semibold text-lg">No FCA forms yet</p>
+                    <p className="text-sm text-palette-slate mt-1">Click <strong>New Entry</strong> above to add one</p>
+                  </div>
                 ) : (
+                  <>
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">FCA Name</th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Province</th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Certification</th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Organic Members</th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                        <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                      <tr className="border-b-2 border-palette-sky/40 bg-gradient-to-r from-palette-cream/70 to-palette-sky/20">
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">FCA Name</th>
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Province</th>
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Certification</th>
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Organic Members</th>
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Date</th>
+                        <th className="text-left py-4 px-4 text-xs font-bold text-palette-brown uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {fcas.map((row) => (
+                      {paginatedFcas.map((row) => (
                         <Fragment key={row.id}>
-                          <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                            <td className="py-3 px-2">{row.nameOfFCA}</td>
-                            <td className="py-3 px-2">{row.province}</td>
-                            <td className="py-3 px-2">{row.certification}</td>
-                            <td className="py-3 px-2">{row.organicMembers}</td>
-                            <td className="py-3 px-2">{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}</td>
-                            <td className="py-3 px-2">
-                              <div className="flex flex-wrap gap-2 items-center">
+                          <tr className="border-b border-palette-sky/15 hover:bg-palette-cream/40">
+                            <td className="py-3.5 px-4 font-medium text-palette-brown">{row.nameOfFCA}</td>
+                            <td className="py-3.5 px-4 text-palette-slate">{row.province}</td>
+                            <td className="py-3.5 px-4 text-palette-slate">{row.certification}</td>
+                            <td className="py-3.5 px-4 text-palette-brown">{row.organicMembers}</td>
+                            <td className="py-3.5 px-4 text-palette-slate">{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '—'}</td>
+                            <td className="py-3.5 px-4">
+                              <div className="flex flex-wrap gap-1 items-center">
                                 <button
                                   onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
                                   title={expandedId === row.id ? 'Hide' : 'View'}
-                                  className="p-2 rounded-lg text-oa-green hover:bg-oa-green/10 transition"
+                                  className="p-2.5 rounded-xl text-palette-green hover:bg-palette-green/15 border border-transparent hover:border-palette-green/30"
                                 >
-                                  <Icon icon={expandedId === row.id ? 'mdi:eye-off' : 'mdi:eye'} className="text-lg" />
+                                  <Icon icon={expandedId === row.id ? 'mdi:eye-off' : 'mdi:eye'} className="text-base" />
                                 </button>
-                                <Link to={`/entry/fca/${row.id}/edit`} title="Edit" className="p-2 rounded-lg text-oa-blue hover:bg-oa-blue/10 transition inline-flex">
-                                  <Icon icon="mdi:pencil" className="text-lg" />
+                                <Link to={`/entry/fca/${row.id}/edit`} title="Edit" className="p-2.5 rounded-xl text-palette-blue hover:bg-palette-blue/15 border border-transparent hover:border-palette-blue/30 inline-flex">
+                                  <Icon icon="mdi:pencil" className="text-base" />
                                 </Link>
                                 {isAdmin() && (
                                   <button
                                     onClick={() => setDeleteConfirm({ show: true, id: row.id, type: 'fcas' })}
                                     title="Delete"
-                                    className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition"
+                                    className="p-2.5 rounded-xl text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200"
                                   >
-                                    <Icon icon="mdi:delete" className="text-lg" />
+                                    <Icon icon="mdi:delete" className="text-base" />
                                   </button>
                                 )}
                               </div>
@@ -506,7 +671,7 @@ export default function Dashboard() {
                           </tr>
                           {expandedId === row.id && (
                             <tr key={`${row.id}-detail`}>
-                              <td colSpan={6} className="bg-gray-50 p-4">
+                              <td colSpan={6} className="bg-palette-cream/50 p-5 border-b-2 border-palette-sky/20">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                                   <p><strong>Business Address:</strong> {row.businessAddress}</p>
                                   <p><strong>Barangay/Municipalities:</strong> {row.barangayMunicipalitiesCovered}</p>
@@ -528,6 +693,33 @@ export default function Dashboard() {
                       ))}
                     </tbody>
                   </table>
+                  {fcas.length > PAGE_SIZE && (
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 text-xs text-palette-slate gap-2 border-t border-palette-sky/20">
+                      <span>
+                        {`Showing ${fcaStart + 1}-${Math.min(fcaStart + PAGE_SIZE, fcas.length)} of ${fcas.length} FCA forms`}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handlePrevFcas}
+                          disabled={safeFcaPage === 1}
+                          className="px-3 py-1.5 rounded-lg border text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed border-palette-sky/40 hover:bg-palette-cream/40"
+                        >
+                          Previous
+                        </button>
+                        <span className="text-[11px]">
+                          Page {safeFcaPage} of {totalFcaPages}
+                        </span>
+                        <button
+                          onClick={handleNextFcas}
+                          disabled={safeFcaPage === totalFcaPages}
+                          className="px-3 py-1.5 rounded-lg border text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed border-palette-sky/40 hover:bg-palette-cream/40"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  </>
                 )}
               </div>
             )}
@@ -537,17 +729,16 @@ export default function Dashboard() {
   );
 }
 
-function MetricCard({ title, value, icon }) {
+function MetricCard({ title, value }) {
   return (
-    <div className="bg-white rounded-xl border-2 border-gray-200 shadow-md p-5 hover:shadow-lg transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-600 truncate">{title}</p>
-          <p className="text-xl font-bold text-gray-900 mt-1">{value}</p>
-        </div>
-        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-oa-green/20 flex items-center justify-center">
-          <Icon icon={icon} className="text-xl text-oa-green" />
-        </div>
+    <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-lg p-5 hover:shadow-xl hover:border-palette-sky/50">
+      <div className="min-w-0">
+        <p className="text-xs font-bold text-palette-slate uppercase tracking-wider mb-1.5">
+          {title}
+        </p>
+        <p className="text-2xl font-bold text-palette-brown tabular-nums">
+          {value}
+        </p>
       </div>
     </div>
   );

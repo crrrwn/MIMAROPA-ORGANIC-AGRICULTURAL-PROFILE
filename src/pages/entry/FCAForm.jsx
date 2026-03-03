@@ -149,17 +149,25 @@ export default function FCAForm() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto space-y-6">
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
-          className="inline-flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition"
+          className="inline-flex items-center gap-2 px-4 py-2.5 mb-6 text-sm font-medium rounded-xl border-2 border-palette-sky/50 bg-palette-cream/50 text-palette-brown hover:bg-palette-sky/20 hover:border-palette-blue/40"
         >
           <Icon icon="mdi:arrow-left" className="text-lg" /> Back to Dashboard
         </button>
-        <h1 className="text-2xl font-bold text-palette-brown mb-6">
-          Form B: Organic Agriculture Profile FCA Form {isEdit && '(Edit)'}
-        </h1>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h1 className="text-2xl font-bold text-palette-brown">
+            Form B: Organic Agriculture Profile FCA Form
+          </h1>
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${isEdit ? 'bg-palette-cream text-palette-brown border-palette-sky/60' : 'bg-palette-green text-white border-palette-green/70'}`}>
+            {isEdit ? 'Edit Mode' : 'New Entry'}
+          </span>
+        </div>
+        <p className="text-sm text-palette-slate mb-4">
+          {isEdit ? 'Update the details of this Farmers Cooperative/Association (FCA).' : 'Provide the general and certification information of the FCA.'}
+        </p>
         <form onSubmit={handleSubmit} className="space-y-8">
           <Section title="I. General Information">
             <div className="space-y-4">
@@ -257,8 +265,13 @@ export default function FCAForm() {
 
 function Section({ title, children }) {
   return (
-    <div className="p-6 bg-white rounded-xl border border-palette-sky/40 shadow-sm">
-      <h2 className="text-base font-semibold text-palette-brown mb-4 pb-2 border-b border-palette-sky/50">{title}</h2>
+    <div className="p-6 bg-white rounded-2xl border border-palette-sky/40 shadow-md border-l-4 border-l-palette-green/80">
+      <h2 className="text-base font-semibold text-palette-brown mb-3 flex items-center gap-2">
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-palette-green/10 text-palette-green text-xs font-bold">
+          {title.split('.')[0].replace(/[^A-Z0-9]/gi, '') || '§'}
+        </span>
+        <span>{title}</span>
+      </h2>
       {children}
     </div>
   );

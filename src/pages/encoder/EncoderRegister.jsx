@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 import SharedAuthLayout from '../../components/SharedAuthLayout';
 import PasswordInput from '../../components/PasswordInput';
 import { useAuth } from '../../context/AuthContext';
+
+const inputBase =
+  'w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border-2 border-palette-sky/50 text-palette-brown placeholder:text-palette-slate/70 focus:border-palette-blue focus:ring-2 focus:ring-palette-blue/20 focus:bg-palette-cream/30 outline-none';
 
 export default function EncoderRegister() {
   const { province } = useParams();
@@ -44,29 +48,93 @@ export default function EncoderRegister() {
   };
 
   return (
-    <SharedAuthLayout title={`Provincial Encoder Registration - ${provinceName}`} backHref="/encoder/select-province">
-      <div>
-        <form onSubmit={handleSubmit}>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="w-full px-4 py-3 border border-oa-green/40 rounded-lg mb-4 focus:ring-2 focus:ring-oa-green" required />
-          <div className="mb-4">
-            <PasswordInput value={password} onChange={setPassword} placeholder="Password (min 6 characters)" required minLength={6} />
+    <SharedAuthLayout title={`Provincial Encoder Registration — ${provinceName}`} backHref="/encoder/select-province" backIconOnly>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs font-medium text-palette-brown mb-1">Email</label>
+          <div className="relative">
+            <Icon icon="mdi:email-outline" className="absolute left-3 top-1/2 -translate-y-1/2 text-lg text-palette-slate pointer-events-none" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className={inputBase}
+              required
+            />
           </div>
-          <div className="mb-4">
-            <PasswordInput value={confirmPassword} onChange={setConfirmPassword} placeholder="Confirm Password" required />
-          </div>
-          <label className="flex items-center gap-2 text-sm text-oa-brown cursor-pointer mb-4">
-            <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="rounded" />
-            Remember Me
-          </label>
-          {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
-          <button type="submit" disabled={loading} className="w-full py-3 bg-oa-blue hover:bg-oa-blue-dark text-white rounded-lg font-medium transition disabled:opacity-50">
-            {loading ? 'Registering...' : 'Register'}
-          </button>
-          <p className="mt-4 text-center text-sm text-oa-brown">
-            Already have an account? <Link to={`/encoder/${province}/login`} className="text-oa-blue font-medium hover:underline">Login</Link>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-palette-brown mb-1">Password (min 6 characters)</label>
+          <PasswordInput
+            value={password}
+            onChange={setPassword}
+            placeholder="Create a password"
+            required
+            minLength={6}
+            iconLeft={<Icon icon="mdi:lock-outline" className="text-lg text-palette-slate" />}
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-palette-brown mb-1">Confirm Password</label>
+          <PasswordInput
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            placeholder="Re-enter password"
+            required
+            iconLeft={<Icon icon="mdi:lock-check-outline" className="text-lg text-palette-slate" />}
+          />
+        </div>
+
+        <label className="flex items-center gap-2 text-xs text-palette-brown cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="w-3.5 h-3.5 rounded border-2 border-palette-slate/50 text-palette-green focus:ring-palette-green/30"
+          />
+          <span className="group-hover:text-palette-brown/90">Remember Me</span>
+        </label>
+
+        {error && (
+          <p className="text-red-600 text-xs flex items-center gap-1.5">
+            <Icon icon="mdi:alert-circle-outline" className="text-base shrink-0" />
+            {error}
           </p>
-        </form>
-      </div>
+        )}
+
+        <div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 text-sm bg-palette-green text-white rounded-xl font-semibold shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[40px] hover:opacity-90"
+          >
+            {loading ? (
+              <>
+                <Icon icon="mdi:loading" className="text-lg" />
+                Registering...
+              </>
+            ) : (
+              <>
+                <Icon icon="mdi:account-plus" className="text-lg" />
+                Register
+              </>
+            )}
+          </button>
+        </div>
+
+        <p className="text-center text-xs text-palette-slate pt-0.5">
+          Already have an account?{' '}
+          <Link
+            to={`/encoder/${province}/login`}
+            className="text-palette-green font-semibold hover:underline underline-offset-2 text-sm"
+          >
+            Login
+          </Link>
+        </p>
+      </form>
     </SharedAuthLayout>
   );
 }

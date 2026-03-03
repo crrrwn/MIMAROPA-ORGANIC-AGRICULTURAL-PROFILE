@@ -13,13 +13,7 @@ import FCAForm from './pages/entry/FCAForm';
 
 function PrivateRoute({ children, adminOnly, encoderOnly }) {
   const { user, userProfile, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center font-poppins">
-        <div className="animate-pulse text-oa-green">Loading...</div>
-      </div>
-    );
-  }
+  if (loading) return children;
   if (!user) return <Navigate to="/" replace />;
   if (adminOnly && userProfile?.role !== 'admin') return <Navigate to="/" replace />;
   if (encoderOnly && userProfile?.role !== 'encoder') return <Navigate to="/" replace />;
