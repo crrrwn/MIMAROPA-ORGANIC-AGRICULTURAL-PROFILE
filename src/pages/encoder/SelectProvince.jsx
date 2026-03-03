@@ -14,7 +14,7 @@ export default function SelectProvince() {
   };
 
   return (
-    <SharedAuthLayout title="Provincial Encoder - Select Province">
+    <SharedAuthLayout title="Provincial Encoder - Select Province" backHref="/">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Select your province</label>
         <select
@@ -35,9 +35,6 @@ export default function SelectProvince() {
           Continue
           <Icon icon="mdi:arrow-right" />
         </button>
-        <Link to="/" className="block mt-4 text-center text-sm text-oa-brown hover:text-oa-green">
-          ← Back to Home
-        </Link>
       </div>
     </SharedAuthLayout>
   );

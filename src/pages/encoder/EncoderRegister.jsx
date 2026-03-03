@@ -44,7 +44,7 @@ export default function EncoderRegister() {
   };
 
   return (
-    <SharedAuthLayout title={`Provincial Encoder Registration - ${provinceName}`}>
+    <SharedAuthLayout title={`Provincial Encoder Registration - ${provinceName}`} backHref="/encoder/select-province">
       <div>
         <form onSubmit={handleSubmit}>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="w-full px-4 py-3 border border-oa-green/40 rounded-lg mb-4 focus:ring-2 focus:ring-oa-green" required />
@@ -66,7 +66,6 @@ export default function EncoderRegister() {
             Already have an account? <Link to={`/encoder/${province}/login`} className="text-oa-blue font-medium hover:underline">Login</Link>
           </p>
         </form>
-        <Link to="/encoder/select-province" className="block mt-4 text-center text-sm text-oa-brown hover:underline">← Back to Province Selection</Link>
       </div>
     </SharedAuthLayout>
   );

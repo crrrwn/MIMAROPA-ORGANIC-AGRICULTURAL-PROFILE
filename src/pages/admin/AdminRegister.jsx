@@ -41,7 +41,7 @@ export default function AdminRegister() {
   };
 
   return (
-    <SharedAuthLayout title="Admin Registration">
+    <SharedAuthLayout title="Admin Registration" backHref="/">
       <div>
         <form onSubmit={handleSubmit}>
           <input
@@ -85,7 +85,6 @@ export default function AdminRegister() {
             Already have an account? <Link to="/admin/login" className="text-oa-green font-medium hover:underline">Login</Link>
           </p>
         </form>
-        <Link to="/" className="block mt-4 text-center text-sm text-oa-brown hover:underline">← Back to Home</Link>
       </div>
     </SharedAuthLayout>
   );

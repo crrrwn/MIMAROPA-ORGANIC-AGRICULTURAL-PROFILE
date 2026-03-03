@@ -42,7 +42,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <SharedAuthLayout title="Admin Login">
+    <SharedAuthLayout title="Admin Login" backHref="/">
       <div>
         {showForgot ? (
           <>
@@ -109,7 +109,6 @@ export default function AdminLogin() {
             </p>
           </form>
         )}
-        <Link to="/" className="block mt-4 text-center text-sm text-oa-brown hover:text-oa-green">← Back to Home</Link>
       </div>
     </SharedAuthLayout>
   );

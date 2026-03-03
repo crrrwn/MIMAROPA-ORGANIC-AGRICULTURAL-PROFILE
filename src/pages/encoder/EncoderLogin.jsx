@@ -43,7 +43,7 @@ export default function EncoderLogin() {
   };
 
   return (
-    <SharedAuthLayout title={`Provincial Encoder - ${decodeURIComponent(province || '')}`}>
+    <SharedAuthLayout title={`Provincial Encoder - ${decodeURIComponent(province || '')}`} backHref="/encoder/select-province">
       <div>
         {showForgot ? (
           <>
@@ -88,7 +88,6 @@ export default function EncoderLogin() {
             </p>
           </form>
         )}
-        <Link to="/encoder/select-province" className="block mt-4 text-center text-sm text-oa-brown hover:text-oa-green">← Back to Province Selection</Link>
       </div>
     </SharedAuthLayout>
   );
