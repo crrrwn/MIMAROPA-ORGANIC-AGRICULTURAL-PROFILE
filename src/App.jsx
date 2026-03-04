@@ -8,12 +8,24 @@ import SelectProvince from './pages/encoder/SelectProvince';
 import EncoderLogin from './pages/encoder/EncoderLogin';
 import EncoderRegister from './pages/encoder/EncoderRegister';
 import Dashboard from './pages/Dashboard';
+import EncodedFormsPage from './pages/EncodedFormsPage';
+import IndividualFormsPage from './pages/IndividualFormsPage';
+import FCAFormsPage from './pages/FCAFormsPage';
 import IndividualForm from './pages/entry/IndividualForm';
 import FCAForm from './pages/entry/FCAForm';
 
 function PrivateRoute({ children, adminOnly, encoderOnly }) {
   const { user, userProfile, loading } = useAuth();
-  if (loading) return children;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-palette-cream/40 to-palette-sky/20">
+        <div className="text-center">
+          <div className="inline-block w-10 h-10 border-4 border-palette-green/30 border-t-palette-green rounded-full animate-spin mb-4" />
+          <p className="text-palette-brown font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   if (!user) return <Navigate to="/" replace />;
   if (adminOnly && userProfile?.role !== 'admin') return <Navigate to="/" replace />;
   if (encoderOnly && userProfile?.role !== 'encoder') return <Navigate to="/" replace />;
@@ -34,6 +46,30 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <Dashboard />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/encoded-forms"
+        element={
+          <PrivateRoute>
+            <EncodedFormsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/individual-forms"
+        element={
+          <PrivateRoute>
+            <IndividualFormsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/fca-forms"
+        element={
+          <PrivateRoute>
+            <FCAFormsPage />
           </PrivateRoute>
         }
       />
