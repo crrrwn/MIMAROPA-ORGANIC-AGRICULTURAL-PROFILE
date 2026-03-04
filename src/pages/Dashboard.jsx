@@ -1,6 +1,6 @@
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { Icon } from '@iconify/react';
@@ -55,6 +55,7 @@ export default function Dashboard() {
   const [commodityBreakdown, setCommodityBreakdown] = useState(null);
   const [individualPage, setIndividualPage] = useState(1);
   const [fcaPage, setFcaPage] = useState(1);
+  const location = useLocation();
 
   const totalIndividualPages = Math.max(1, Math.ceil(individuals.length / PAGE_SIZE));
   const totalFcaPages = Math.max(1, Math.ceil(fcas.length / PAGE_SIZE));
@@ -64,6 +65,15 @@ export default function Dashboard() {
   const fcaStart = (safeFcaPage - 1) * PAGE_SIZE;
   const paginatedIndividuals = individuals.slice(individualStart, individualStart + PAGE_SIZE);
   const paginatedFcas = fcas.slice(fcaStart, fcaStart + PAGE_SIZE);
+
+  useEffect(() => {
+    if (location.hash === '#individual-form') {
+      const el = document.getElementById('individual-form');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [location]);
 
   const handlePrevIndividuals = () => {
     setIndividualPage((p) => Math.max(1, p - 1));
@@ -260,7 +270,7 @@ export default function Dashboard() {
         )}
 
         {/* Individual Form — magkakasama */}
-        <div className="space-y-5">
+        <section id="individual-form" className="space-y-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-palette-green/20 flex items-center justify-center border border-palette-green/40">
               <Icon icon="mdi:account-edit" className="text-lg text-palette-green" />
@@ -366,7 +376,7 @@ export default function Dashboard() {
             <MetricCard title="PGS Certified Area (ha)" value={data.pgs.certifiedArea.toFixed(2)} />
           </div>
         </div>
-        </div>
+        </section>
 
         {commodityBreakdown && createPortal(
           <div
