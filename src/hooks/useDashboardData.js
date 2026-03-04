@@ -31,23 +31,47 @@ export function useDashboardData(province = null) {
 
         indSnap.docs.forEach((doc) => {
           const d = doc.data();
-          const cert = (d.certification || '').toLowerCase();
           const area = parseFloat(d.organicArea) || 0;
-          if (cert.includes('devoted')) {
-            oaArea.totalDevoted += area;
-            practitioners.totalDevoted++;
+          const coms = Array.isArray(d.commodities) ? d.commodities : (d.commodity ? [{ commodity: d.commodity, sizeOfArea: d.organicArea, certification: d.certification }] : []);
+          const hasCommodityCerts = coms.some((c) => (c.certification || '').trim());
+
+          if (hasCommodityCerts) {
+            coms.forEach((c) => {
+              const cert = (c.certification || '').toLowerCase();
+              const itemArea = parseFloat(c.sizeOfArea) || 0;
+              if (cert.includes('devoted')) {
+                oaArea.totalDevoted += itemArea;
+                practitioners.totalDevoted++;
+              }
+              if (cert.includes('pgs')) {
+                oaArea.totalPGSCertified += itemArea;
+                practitioners.totalPGSCertified++;
+                pgs.certifiedFarmers++;
+                pgs.certifiedArea += itemArea;
+              }
+              if (cert.includes('3rd') || cert.includes('third')) {
+                oaArea.total3rdParty += itemArea;
+                practitioners.total3rdParty++;
+              }
+            });
+          } else {
+            const cert = (d.certification || '').toLowerCase();
+            if (cert.includes('devoted')) {
+              oaArea.totalDevoted += area;
+              practitioners.totalDevoted++;
+            }
+            if (cert.includes('pgs')) {
+              oaArea.totalPGSCertified += area;
+              practitioners.totalPGSCertified++;
+              pgs.certifiedFarmers++;
+              pgs.certifiedArea += area;
+            }
+            if (cert.includes('3rd') || cert.includes('third')) {
+              oaArea.total3rdParty += area;
+              practitioners.total3rdParty++;
+            }
           }
-          if (cert.includes('pgs')) {
-            oaArea.totalPGSCertified += area;
-            practitioners.totalPGSCertified++;
-            pgs.certifiedFarmers++;
-            pgs.certifiedArea += area;
-          }
-          if (cert.includes('3rd') || cert.includes('third')) {
-            oaArea.total3rdParty += area;
-            practitioners.total3rdParty++;
-          }
-          const coms = Array.isArray(d.commodities) ? d.commodities : (d.commodity ? [{ commodity: d.commodity }] : []);
+
           coms.forEach((c) => {
             const comm = (c.commodity || '').toLowerCase();
             if (comm.includes('rice')) commodities.rice++;

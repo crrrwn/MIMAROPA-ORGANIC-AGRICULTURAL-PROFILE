@@ -41,8 +41,12 @@ export default function Dashboard() {
   const { isAdmin, getProvince } = useAuth();
   const { showNotification } = useNotification();
   const [selectedProvince, setSelectedProvince] = useState(isAdmin() ? null : getProvince());
+  const [selectedYear, setSelectedYear] = useState(null);
   const province = isAdmin() ? selectedProvince : getProvince();
-  const { data, perProvince, loading, error } = useDashboardDataByProvince(province);
+  const { data, perProvince, loading, error } = useDashboardDataByProvince(province, selectedYear);
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = [null, ...Array.from({ length: currentYear - 2019 }, (_, i) => currentYear - i)];
   const { individuals, fcas, refresh } = useFormEntries(province);
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [formTab, setFormTab] = useState('individual');
@@ -108,6 +112,14 @@ export default function Dashboard() {
     { name: 'Others', key: 'others', value: data.commodities?.others?.totalArea ?? 0 },
   ].filter((d) => d.value > 0);
 
+  const sharedFacilitiesData = Object.entries(data.fcas?.sharedFacilitiesByType || {})
+    .filter(([, value]) => Number(value) > 0)
+    .map(([name, value]) => ({ name, value: Number(value) }));
+
+  const machineryData = Object.entries(data.fcas?.machineryByType || {})
+    .filter(([, value]) => Number(value) > 0)
+    .map(([name, value]) => ({ name, value: Number(value) }));
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -138,8 +150,24 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {isAdmin() && (
-            <div className="flex flex-wrap gap-2 p-2 bg-white/80 rounded-2xl w-fit border-2 border-palette-sky/30 shadow-md">
+        <div className="flex flex-wrap items-center gap-3 p-3 bg-white/80 rounded-2xl w-fit border-2 border-palette-sky/30 shadow-md">
+          <label className="flex items-center gap-2 text-sm font-semibold text-palette-brown shrink-0">
+            <Icon icon="mdi:calendar" className="text-lg text-palette-green" />
+            Year:
+          </label>
+          <select
+            value={selectedYear ?? ''}
+            onChange={(e) => setSelectedYear(e.target.value === '' ? null : Number(e.target.value))}
+            className="px-4 py-2.5 rounded-xl text-sm font-semibold border-2 border-palette-sky/40 bg-white text-palette-brown focus:ring-2 focus:ring-palette-green/30 focus:border-palette-green outline-none"
+          >
+            <option value="">All Years</option>
+            {yearOptions.filter((y) => y !== null).map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+          {isAdmin() && (
+            <>
+              <span className="text-palette-slate/60 text-sm font-medium shrink-0">|</span>
               <button
                 onClick={() => setSelectedProvince(null)}
                 className={`px-4 py-2.5 rounded-xl text-sm font-semibold ${selectedProvince === null ? 'bg-palette-green text-white shadow-md' : 'text-palette-slate hover:text-palette-brown hover:bg-palette-cream/60'}`}
@@ -155,8 +183,9 @@ export default function Dashboard() {
                   {p}
                 </button>
               ))}
-            </div>
+            </>
           )}
+        </div>
 
         {deleteConfirm.show && createPortal(
           <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -230,17 +259,14 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
-          <MetricCard title="Total Devoted OA Area (ha)" value={data.oaArea.totalDevoted.toFixed(2)} />
-          <MetricCard title="Total PGS Certified Area (ha)" value={data.oaArea.totalPGSCertified.toFixed(2)} />
-          <MetricCard title="Total 3rd Party Area (ha)" value={data.oaArea.total3rdParty.toFixed(2)} />
-          <MetricCard
-            title="Total Certified Farmers"
-            value={Number(data.practitioners?.totalPGSCertified ?? 0) + Number(data.practitioners?.total3rdParty ?? 0)}
-          />
-          <MetricCard title="FCAs Engage in OA" value={data.fcas.engageInOA} />
-        </div>
-
+        {/* Individual Form — magkakasama */}
+        <div className="space-y-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-palette-green/20 flex items-center justify-center border border-palette-green/40">
+              <Icon icon="mdi:account-edit" className="text-lg text-palette-green" />
+            </div>
+            <h2 className="text-xl font-bold text-palette-brown">Individual Form</h2>
+          </div>
         <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-xl p-6 border-l-4 border-l-palette-green">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-palette-green/20 to-palette-sky/20 flex items-center justify-center border border-palette-sky/30">
@@ -253,6 +279,10 @@ export default function Dashboard() {
             <MetricCard title="PGS Certified" value={data.practitioners.totalPGSCertified} />
             <MetricCard title="3rd Party Certified" value={data.practitioners.total3rdParty} />
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4 pt-4 border-t border-palette-sky/20">
+            <MetricCard title="Male Practitioners" value={data.practitioners.totalMale ?? 0} />
+            <MetricCard title="Female Practitioners" value={data.practitioners.totalFemale ?? 0} />
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-lg p-6 border-l-4 border-l-palette-blue">
@@ -260,7 +290,7 @@ export default function Dashboard() {
             <div className="w-10 h-10 rounded-lg bg-palette-blue/10 flex items-center justify-center border border-palette-sky/30">
               <Icon icon="mdi:certificate" className="text-lg text-palette-blue" />
             </div>
-            <h3 className="font-bold text-palette-brown text-lg">OA Area by Certification</h3>
+            <h3 className="font-bold text-palette-brown text-lg">OA Area</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <MetricCard title="Devoted OA Area (ha)" value={data.oaArea.totalDevoted.toFixed(2)} />
@@ -324,8 +354,26 @@ export default function Dashboard() {
           <p className="text-xs text-palette-slate mt-2">Click on a segment to view breakdown</p>
         </div>
 
-        {commodityBreakdown && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={() => setCommodityBreakdown(null)}>
+        <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-xl p-6 border-l-4 border-l-palette-green">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-palette-green/20 to-palette-sky/20 flex items-center justify-center border border-palette-sky/30">
+              <Icon icon="mdi:certificate-outline" className="text-lg text-palette-green" />
+            </div>
+            <h3 className="font-bold text-palette-brown text-lg">PGS (Individual)</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <MetricCard title="PGS Certified Farmers" value={data.pgs.certifiedFarmers} />
+            <MetricCard title="PGS Certified Area (ha)" value={data.pgs.certifiedArea.toFixed(2)} />
+          </div>
+        </div>
+        </div>
+
+        {commodityBreakdown && createPortal(
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-[9999] p-4"
+            style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', minHeight: '100dvh' }}
+            onClick={() => setCommodityBreakdown(null)}
+          >
             <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col border-2 border-palette-sky/40" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-lg bg-palette-green/20 flex items-center justify-center border border-palette-green/30">
@@ -357,15 +405,101 @@ export default function Dashboard() {
               </div>
               <button onClick={() => setCommodityBreakdown(null)} className="mt-4 py-2.5 px-4 border-2 border-palette-sky/50 rounded-xl text-palette-brown font-medium hover:bg-palette-cream/50 self-end">Close</button>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
-          <MetricCard title="PGS Accredited Groups" value={data.pgs.accreditedGroups} />
-          <MetricCard title="PGS Applying" value={data.pgs.applyingForAccreditation} />
-          <MetricCard title="Engaged Organic Farming" value={data.pgs.engagedOrganicFarming ?? 0} />
-          <MetricCard title="PGS Certified Farmers" value={data.pgs.certifiedFarmers} />
-          <MetricCard title="PGS Certified Area (ha)" value={data.pgs.certifiedArea.toFixed(2)} />
+        {/* FCA Form — isang card */}
+        <div className="bg-white rounded-2xl border-2 border-palette-sky/30 shadow-xl p-6 border-l-4 border-l-palette-blue">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-lg bg-palette-blue/10 flex items-center justify-center border border-palette-sky/30">
+              <Icon icon="mdi:account-group" className="text-lg text-palette-blue" />
+            </div>
+            <h3 className="font-bold text-palette-brown text-lg">FCA Form</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <MetricCard title="PGS Accredited Groups" value={data.pgs.accreditedGroups} />
+            <MetricCard title="PGS Applicant" value={data.pgs.applyingForAccreditation} />
+            <MetricCard title="Engaged Organic Farming" value={data.pgs.engagedOrganicFarming ?? 0} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4 pt-4 border-t border-palette-sky/20">
+            <MetricCard title="Organic Members (Male)" value={data.fcas.organicMembersMale ?? 0} />
+            <MetricCard title="Organic Members (Female)" value={data.fcas.organicMembersFemale ?? 0} />
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-palette-sky/20">
+            <h4 className="font-semibold text-palette-brown mb-3 flex items-center gap-2">
+              <Icon icon="mdi:chart-pie" className="text-palette-blue" />
+              Shared Facilities and Capacities
+            </h4>
+            {sharedFacilitiesData.length > 0 ? (
+              <div className="rounded-xl bg-gradient-to-b from-palette-cream/40 to-palette-sky/20 p-4 border border-palette-sky/30">
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                    <Pie
+                      data={sharedFacilitiesData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={86}
+                      paddingAngle={3}
+                      dataKey="value"
+                      nameKey="name"
+                      stroke="#fff"
+                      strokeWidth={2}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      labelLine={{ stroke: CHART_AXIS, strokeWidth: 1 }}
+                    >
+                      {sharedFacilitiesData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} strokeWidth={2} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v) => [v, 'Count']} contentStyle={tooltipStyle} itemStyle={{ color: CHART_AXIS, fontWeight: 600 }} />
+                    <Legend wrapperStyle={{ paddingTop: 8 }} iconType="circle" iconSize={10} formatter={(value) => <span style={{ color: CHART_AXIS, fontSize: 12, fontWeight: 500 }}>{value}</span>} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-palette-slate text-sm text-center py-6">No shared facilities data yet</p>
+            )}
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-palette-sky/20">
+            <h4 className="font-semibold text-palette-brown mb-3 flex items-center gap-2">
+              <Icon icon="mdi:chart-pie" className="text-palette-blue" />
+              Machinery, Equipment, and Other Components
+            </h4>
+            {machineryData.length > 0 ? (
+              <div className="rounded-xl bg-gradient-to-b from-palette-cream/40 to-palette-sky/20 p-4 border border-palette-sky/30">
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                    <Pie
+                      data={machineryData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={86}
+                      paddingAngle={3}
+                      dataKey="value"
+                      nameKey="name"
+                      stroke="#fff"
+                      strokeWidth={2}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      labelLine={{ stroke: CHART_AXIS, strokeWidth: 1 }}
+                    >
+                      {machineryData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} strokeWidth={2} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v) => [v, 'Count']} contentStyle={tooltipStyle} itemStyle={{ color: CHART_AXIS, fontWeight: 600 }} />
+                    <Legend wrapperStyle={{ paddingTop: 8 }} iconType="circle" iconSize={10} formatter={(value) => <span style={{ color: CHART_AXIS, fontSize: 12, fontWeight: 500 }}>{value}</span>} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-palette-slate text-sm text-center py-6">No machinery data yet</p>
+            )}
+          </div>
         </div>
 
         {isAdmin() && selectedProvince === null && Object.keys(perProvince).length > 0 && (

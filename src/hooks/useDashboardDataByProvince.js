@@ -10,8 +10,16 @@ function emptyCommodity() {
 function emptyMetrics() {
   return {
     oaArea: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0 },
-    practitioners: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0 },
-    fcas: { engageInOA: 0 },
+    practitioners: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0, totalMale: 0, totalFemale: 0 },
+    fcas: {
+      engageInOA: 0,
+      organicMembersMale: 0,
+      organicMembersFemale: 0,
+      totalSharedFacilities: 0,
+      sharedFacilitiesDedicatedToOrganic: 0,
+      sharedFacilitiesByType: {},
+      machineryByType: {},
+    },
     commodities: {
       rice: emptyCommodity(),
       corn: emptyCommodity(),
@@ -24,7 +32,14 @@ function emptyMetrics() {
   };
 }
 
-export function useDashboardDataByProvince(province = null) {
+function getDocYear(d) {
+  const dateStr = d.updatedAt || d.createdAt;
+  if (!dateStr) return null;
+  const y = new Date(dateStr).getFullYear();
+  return Number.isNaN(y) ? null : y;
+}
+
+export function useDashboardDataByProvince(province = null, selectedYear = null) {
   const [data, setData] = useState(emptyMetrics());
   const [perProvince, setPerProvince] = useState({});
   const [loading, setLoading] = useState(true);
@@ -45,24 +60,50 @@ export function useDashboardDataByProvince(province = null) {
         });
 
         const processIndividual = (d, target) => {
-          const cert = (d.certification || '').toLowerCase();
           const area = parseFloat(d.organicArea) || 0;
           const name = d.completeName || [d.surname, d.firstName].filter(Boolean).join(' ') || 'N/A';
-          if (cert.includes('devoted')) {
-            target.oaArea.totalDevoted += area;
-            target.practitioners.totalDevoted++;
+          const coms = Array.isArray(d.commodities) ? d.commodities : (d.commodity ? [{ commodity: d.commodity, sizeOfArea: d.organicArea, certification: d.certification, products: '' }] : []);
+          const hasCommodityCerts = coms.some((c) => (c.certification || '').trim());
+
+          if (hasCommodityCerts) {
+            // Count by each commodity's certification (e.g. 2 commodities with different certs = both count)
+            coms.forEach((c) => {
+              const cert = (c.certification || '').toLowerCase();
+              const itemArea = parseFloat(c.sizeOfArea) || 0;
+              if (cert.includes('devoted')) {
+                target.oaArea.totalDevoted += itemArea;
+                target.practitioners.totalDevoted++;
+              }
+              if (cert.includes('pgs')) {
+                target.oaArea.totalPGSCertified += itemArea;
+                target.practitioners.totalPGSCertified++;
+                target.pgs.certifiedFarmers++;
+                target.pgs.certifiedArea += itemArea;
+              }
+              if (cert.includes('3rd') || cert.includes('third')) {
+                target.oaArea.total3rdParty += itemArea;
+                target.practitioners.total3rdParty++;
+              }
+            });
+          } else {
+            // Fallback: individual-level certification (backward compatibility)
+            const cert = (d.certification || '').toLowerCase();
+            if (cert.includes('devoted')) {
+              target.oaArea.totalDevoted += area;
+              target.practitioners.totalDevoted++;
+            }
+            if (cert.includes('pgs')) {
+              target.oaArea.totalPGSCertified += area;
+              target.practitioners.totalPGSCertified++;
+              target.pgs.certifiedFarmers++;
+              target.pgs.certifiedArea += area;
+            }
+            if (cert.includes('3rd') || cert.includes('third')) {
+              target.oaArea.total3rdParty += area;
+              target.practitioners.total3rdParty++;
+            }
           }
-          if (cert.includes('pgs')) {
-            target.oaArea.totalPGSCertified += area;
-            target.practitioners.totalPGSCertified++;
-            target.pgs.certifiedFarmers++;
-            target.pgs.certifiedArea += area;
-          }
-          if (cert.includes('3rd') || cert.includes('third')) {
-            target.oaArea.total3rdParty += area;
-            target.practitioners.total3rdParty++;
-          }
-          const coms = Array.isArray(d.commodities) ? d.commodities : (d.commodity ? [{ commodity: d.commodity, sizeOfArea: d.organicArea, products: '' }] : []);
+
           coms.forEach((c) => {
             const comm = (c.commodity || '').toLowerCase();
             const itemArea = parseFloat(c.sizeOfArea) || 0;
@@ -88,10 +129,21 @@ export function useDashboardDataByProvince(province = null) {
               target.commodities.others.items.push(item);
             }
           });
+
+          const sex = (d.sex || '').toLowerCase();
+          if (sex === 'male') target.practitioners.totalMale++;
+          else if (sex === 'female') target.practitioners.totalFemale++;
+        };
+
+        const filterByYear = (d) => {
+          if (selectedYear == null) return true;
+          const docYear = getDocYear(d);
+          return docYear !== null && docYear === selectedYear;
         };
 
         (indSnap.docs || []).forEach((docSnap) => {
           const d = docSnap.data();
+          if (!filterByYear(d)) return;
           const p = d.province || 'Other';
           if (!byProvince[p]) byProvince[p] = emptyMetrics();
           processIndividual(d, byProvince[p]);
@@ -99,9 +151,26 @@ export function useDashboardDataByProvince(province = null) {
 
         (fcasSnap.docs || []).forEach((docSnap) => {
           const d = docSnap.data();
+          if (!filterByYear(d)) return;
           const p = d.province || 'Other';
           if (!byProvince[p]) byProvince[p] = emptyMetrics();
           if (d.engageInOA) byProvince[p].fcas.engageInOA++;
+          byProvince[p].fcas.organicMembersMale += Number(d.organicMembersMale) || 0;
+          byProvince[p].fcas.organicMembersFemale += Number(d.organicMembersFemale) || 0;
+          const facilities = Array.isArray(d.sharedFacilities) ? d.sharedFacilities : [];
+          byProvince[p].fcas.totalSharedFacilities += facilities.length;
+          facilities.forEach((f) => {
+            if ((f.dedicatedToOrganic || '').toString().toLowerCase() === 'yes') {
+              byProvince[p].fcas.sharedFacilitiesDedicatedToOrganic++;
+            }
+            const type = (f.typeOfFacilities || 'Unspecified').trim() || 'Unspecified';
+            byProvince[p].fcas.sharedFacilitiesByType[type] = (byProvince[p].fcas.sharedFacilitiesByType[type] || 0) + 1;
+          });
+          const machinery = Array.isArray(d.machinery) ? d.machinery : [];
+          machinery.forEach((m) => {
+            const type = (m.type || 'Unspecified').trim() || 'Unspecified';
+            byProvince[p].fcas.machineryByType[type] = (byProvince[p].fcas.machineryByType[type] || 0) + 1;
+          });
           const fcaCert = (d.certification || '').toLowerCase();
           if (fcaCert.includes('pgs accredited') || fcaCert.includes('pgs accreditation')) {
             byProvince[p].pgs.accreditedGroups++;
@@ -128,7 +197,19 @@ export function useDashboardDataByProvince(province = null) {
           acc.practitioners.totalDevoted += m.practitioners.totalDevoted;
           acc.practitioners.totalPGSCertified += m.practitioners.totalPGSCertified;
           acc.practitioners.total3rdParty += m.practitioners.total3rdParty;
+          acc.practitioners.totalMale += m.practitioners.totalMale || 0;
+          acc.practitioners.totalFemale += m.practitioners.totalFemale || 0;
           acc.fcas.engageInOA += m.fcas.engageInOA;
+          acc.fcas.organicMembersMale += m.fcas.organicMembersMale || 0;
+          acc.fcas.organicMembersFemale += m.fcas.organicMembersFemale || 0;
+          acc.fcas.totalSharedFacilities += m.fcas.totalSharedFacilities || 0;
+          acc.fcas.sharedFacilitiesDedicatedToOrganic += m.fcas.sharedFacilitiesDedicatedToOrganic || 0;
+          Object.entries(m.fcas.sharedFacilitiesByType || {}).forEach(([k, v]) => {
+            acc.fcas.sharedFacilitiesByType[k] = (acc.fcas.sharedFacilitiesByType[k] || 0) + v;
+          });
+          Object.entries(m.fcas.machineryByType || {}).forEach(([k, v]) => {
+            acc.fcas.machineryByType[k] = (acc.fcas.machineryByType[k] || 0) + v;
+          });
           ['rice', 'corn', 'vegetables', 'livestockPoultry', 'fertilizer', 'others'].forEach((k) => {
             acc.commodities[k].totalArea += (m.commodities[k]?.totalArea || 0);
             acc.commodities[k].items = [...(acc.commodities[k].items || []), ...(m.commodities[k]?.items || [])];
@@ -174,7 +255,7 @@ export function useDashboardDataByProvince(province = null) {
       indUnsub?.();
       fcasUnsub?.();
     };
-  }, [province]);
+  }, [province, selectedYear]);
 
   return { data, perProvince, loading, error };
 }

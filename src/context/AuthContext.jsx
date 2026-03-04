@@ -41,10 +41,30 @@ export function AuthProvider({ children }) {
 
   const signIn = async (email, password, rememberMe, role, province = null) => {
     const userCred = await signInWithEmailAndPassword(auth, email, password);
-    setUser(userCred.user);
     const profileRef = doc(db, 'users', userCred.user.uid);
     const profileSnap = await getDoc(profileRef);
-    setUserProfile(profileSnap.exists() ? profileSnap.data() : null);
+    const profile = profileSnap.exists() ? profileSnap.data() : null;
+
+    // Admin login page: only allow users with role 'admin'. Encoders must use Encoder login.
+    if (role === 'admin' && profile?.role !== 'admin') {
+      await firebaseSignOut(auth);
+      setUser(null);
+      setUserProfile(null);
+      setLoading(false);
+      throw new Error('Access denied. This page is for administrators only. Please use the Encoder login.');
+    }
+
+    // Encoder login page: only allow users with role 'encoder'. Admins must use Admin login.
+    if (role === 'encoder' && profile?.role === 'admin') {
+      await firebaseSignOut(auth);
+      setUser(null);
+      setUserProfile(null);
+      setLoading(false);
+      throw new Error('Access denied. This page is for encoders only. Please use the Admin login.');
+    }
+
+    setUser(userCred.user);
+    setUserProfile(profile);
     setLoading(false);
     if (rememberMe) {
       localStorage.setItem('rememberMe_email', email);
