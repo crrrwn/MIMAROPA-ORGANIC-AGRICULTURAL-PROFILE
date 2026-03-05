@@ -4,8 +4,8 @@ import { Icon } from '@iconify/react';
 export default function SharedAuthLayout({ children, title, backHref, hideBack, backIconOnly }) {
   const showBack = backHref && !hideBack;
   return (
-    <div className="min-h-screen flex font-poppins bg-palette-cream/40">
-      <div className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen flex font-poppins bg-palette-cream/40 min-w-0 overflow-x-hidden">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden min-w-0 max-w-full">
         {/* palette accents: sky + green soft blurs */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-80 h-80 bg-palette-sky/30 rounded-full blur-3xl -translate-y-1/2" />

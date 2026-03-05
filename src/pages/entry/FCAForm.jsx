@@ -197,7 +197,7 @@ export default function FCAForm() {
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500">
+      <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 min-w-0 overflow-x-hidden w-full">
         
         {/* Modern Back Button */}
         <button

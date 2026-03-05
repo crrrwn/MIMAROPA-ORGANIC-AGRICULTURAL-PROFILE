@@ -182,7 +182,7 @@ export default function AdminLogin() {
               >
                 {loading ? (
                   <>
-                    <Icon icon="mdi:loading" className="text-lg" />
+                    <Icon icon="mdi:loading" className="text-lg animate-spin" />
                     Signing in...
                   </>
                 ) : (

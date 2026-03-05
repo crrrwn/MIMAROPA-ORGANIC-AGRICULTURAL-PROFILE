@@ -16,12 +16,13 @@ import FCAForm from './pages/entry/FCAForm';
 
 function PrivateRoute({ children, adminOnly, encoderOnly }) {
   const { user, userProfile, loading } = useAuth();
-  if (loading) {
+  // Show loading until auth is resolved (avoids errors on refresh when auth state is rehydrating)
+  if (loading || (user && userProfile === undefined)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-palette-cream/40 to-palette-sky/20">
+      <div className="min-h-screen flex items-center justify-center bg-[#F2F8ED]">
         <div className="text-center">
-          <div className="inline-block w-10 h-10 border-4 border-palette-green/30 border-t-palette-green rounded-full animate-spin mb-4" />
-          <p className="text-palette-brown font-medium">Loading...</p>
+          <div className="inline-block w-10 h-10 border-4 border-[#84BC40]/30 border-t-[#84BC40] rounded-full animate-spin mb-4" />
+          <p className="text-[#8D4A25] font-medium">Loading...</p>
         </div>
       </div>
     );
@@ -112,7 +113,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AuthProvider>
         <NotificationProvider>
           <AppRoutes />

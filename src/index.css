@@ -12,6 +12,12 @@
   50% { transform: translateY(-8px); }
 }
 
+/* Spinner rotation — ensures all loading spinners actually spin */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 * {
   font-family: 'Poppins', sans-serif;
 }

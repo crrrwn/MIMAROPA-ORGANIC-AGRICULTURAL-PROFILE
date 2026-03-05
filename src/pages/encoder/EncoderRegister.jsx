@@ -113,7 +113,7 @@ export default function EncoderRegister() {
           >
             {loading ? (
               <>
-                <Icon icon="mdi:loading" className="text-lg" />
+                <Icon icon="mdi:loading" className="text-lg animate-spin" />
                 Registering...
               </>
             ) : (

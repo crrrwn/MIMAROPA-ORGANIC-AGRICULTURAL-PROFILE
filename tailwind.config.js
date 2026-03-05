@@ -88,6 +88,10 @@ export default {
           '0%': { opacity: '0', transform: 'scale(0.96) translateY(8px)' },
           '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
         },
+        spin: {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
+        },
       },
       animation: {
         'fade-in-up': 'fade-in-up 1s ease-out forwards',
@@ -99,6 +103,7 @@ export default {
         'shimmer': 'shimmer 3s ease-in-out infinite',
         'shake': 'shake 0.5s ease-in-out',
         'fade-in-scale': 'fade-in-scale 0.35s ease-out forwards',
+        spin: 'spin 0.8s linear infinite',
       },
     },
   },
