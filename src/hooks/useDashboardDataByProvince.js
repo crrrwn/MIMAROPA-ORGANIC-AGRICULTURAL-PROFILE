@@ -10,7 +10,7 @@ function emptyCommodity() {
 function emptyMetrics() {
   return {
     oaArea: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0 },
-    practitioners: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0, totalMale: 0, totalFemale: 0 },
+    practitioners: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0, totalMale: 0, totalFemale: 0, totalPWD: 0, totalSeniorCitizen: 0 },
     fcas: {
       engageInOA: 0,
       organicMembersMale: 0,
@@ -133,6 +133,10 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
           const sex = (d.sex || '').toLowerCase();
           if (sex === 'male') target.practitioners.totalMale++;
           else if (sex === 'female') target.practitioners.totalFemale++;
+
+          const pwd = (d.pwd || '').toLowerCase();
+          if (pwd === 'yes') target.practitioners.totalPWD++;
+          else if (pwd === 'senior citizen') target.practitioners.totalSeniorCitizen++;
         };
 
         const filterByYear = (d) => {
@@ -157,6 +161,7 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
           if (d.engageInOA) byProvince[p].fcas.engageInOA++;
           byProvince[p].fcas.organicMembersMale += Number(d.organicMembersMale) || 0;
           byProvince[p].fcas.organicMembersFemale += Number(d.organicMembersFemale) || 0;
+          const fcaName = d.nameOfFCA || 'N/A';
           const facilities = Array.isArray(d.sharedFacilities) ? d.sharedFacilities : [];
           byProvince[p].fcas.totalSharedFacilities += facilities.length;
           facilities.forEach((f) => {
@@ -164,12 +169,34 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
               byProvince[p].fcas.sharedFacilitiesDedicatedToOrganic++;
             }
             const type = (f.typeOfFacilities || 'Unspecified').trim() || 'Unspecified';
-            byProvince[p].fcas.sharedFacilitiesByType[type] = (byProvince[p].fcas.sharedFacilitiesByType[type] || 0) + 1;
+            if (!byProvince[p].fcas.sharedFacilitiesByType[type]) byProvince[p].fcas.sharedFacilitiesByType[type] = { count: 0, items: [] };
+            byProvince[p].fcas.sharedFacilitiesByType[type].count++;
+            byProvince[p].fcas.sharedFacilitiesByType[type].items.push({
+              fcaName,
+              area: f.area || '',
+              typeOfFacilities: f.typeOfFacilities || '',
+              sizeOfArea: f.sizeOfArea || '',
+              capacities: f.capacities || '',
+              cost: f.cost || '',
+              noOfUnits: f.noOfUnits || '',
+              dedicatedToOrganic: f.dedicatedToOrganic || '',
+              remarks: f.remarks || '',
+            });
           });
           const machinery = Array.isArray(d.machinery) ? d.machinery : [];
           machinery.forEach((m) => {
             const type = (m.type || 'Unspecified').trim() || 'Unspecified';
-            byProvince[p].fcas.machineryByType[type] = (byProvince[p].fcas.machineryByType[type] || 0) + 1;
+            if (!byProvince[p].fcas.machineryByType[type]) byProvince[p].fcas.machineryByType[type] = { count: 0, items: [] };
+            byProvince[p].fcas.machineryByType[type].count++;
+            byProvince[p].fcas.machineryByType[type].items.push({
+              fcaName,
+              type: m.type || '',
+              capacities: m.capacities || '',
+              cost: m.cost || '',
+              noOfUnits: m.noOfUnits || '',
+              dedicatedToOrganic: m.dedicatedToOrganic || '',
+              remarks: m.remarks || '',
+            });
           });
           const fcaCert = (d.certification || '').toLowerCase();
           if (fcaCert.includes('pgs accredited') || fcaCert.includes('pgs accreditation')) {
@@ -199,16 +226,26 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
           acc.practitioners.total3rdParty += m.practitioners.total3rdParty;
           acc.practitioners.totalMale += m.practitioners.totalMale || 0;
           acc.practitioners.totalFemale += m.practitioners.totalFemale || 0;
+          acc.practitioners.totalPWD += m.practitioners.totalPWD || 0;
+          acc.practitioners.totalSeniorCitizen += m.practitioners.totalSeniorCitizen || 0;
           acc.fcas.engageInOA += m.fcas.engageInOA;
           acc.fcas.organicMembersMale += m.fcas.organicMembersMale || 0;
           acc.fcas.organicMembersFemale += m.fcas.organicMembersFemale || 0;
           acc.fcas.totalSharedFacilities += m.fcas.totalSharedFacilities || 0;
           acc.fcas.sharedFacilitiesDedicatedToOrganic += m.fcas.sharedFacilitiesDedicatedToOrganic || 0;
           Object.entries(m.fcas.sharedFacilitiesByType || {}).forEach(([k, v]) => {
-            acc.fcas.sharedFacilitiesByType[k] = (acc.fcas.sharedFacilitiesByType[k] || 0) + v;
+            const prev = acc.fcas.sharedFacilitiesByType[k] || { count: 0, items: [] };
+            acc.fcas.sharedFacilitiesByType[k] = {
+              count: prev.count + (v.count ?? 0),
+              items: [...(prev.items || []), ...(v.items || [])],
+            };
           });
           Object.entries(m.fcas.machineryByType || {}).forEach(([k, v]) => {
-            acc.fcas.machineryByType[k] = (acc.fcas.machineryByType[k] || 0) + v;
+            const prev = acc.fcas.machineryByType[k] || { count: 0, items: [] };
+            acc.fcas.machineryByType[k] = {
+              count: prev.count + (v.count ?? 0),
+              items: [...(prev.items || []), ...(v.items || [])],
+            };
           });
           ['rice', 'corn', 'vegetables', 'livestockPoultry', 'fertilizer', 'others'].forEach((k) => {
             acc.commodities[k].totalArea += (m.commodities[k]?.totalArea || 0);

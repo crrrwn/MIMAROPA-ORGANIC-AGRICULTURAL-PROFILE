@@ -41,9 +41,10 @@ export default function Dashboard() {
   const province = isAdmin() ? selectedProvince : getProvince();
   const { data, perProvince, loading, error } = useDashboardDataByProvince(province, selectedYear);
 
-  const currentYear = new Date().getFullYear();
-  const yearOptions = [null, ...Array.from({ length: currentYear - 2019 }, (_, i) => currentYear - i)];
+  const yearOptions = [null, 2030, 2029, 2028, 2027, 2026, 2025];
   const [commodityBreakdown, setCommodityBreakdown] = useState(null);
+  const [facilityBreakdown, setFacilityBreakdown] = useState(null);
+  const [machineryBreakdown, setMachineryBreakdown] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -67,12 +68,12 @@ export default function Dashboard() {
   ].filter((d) => d.value > 0);
 
   const sharedFacilitiesData = Object.entries(data.fcas?.sharedFacilitiesByType || {})
-    .filter(([, value]) => Number(value) > 0)
-    .map(([name, value]) => ({ name, value: Number(value) }));
+    .filter(([, v]) => (typeof v === 'number' ? v : v?.count ?? 0) > 0)
+    .map(([name, v]) => ({ name, value: Number(typeof v === 'number' ? v : (v?.count ?? 0)), key: name, items: Array.isArray(v?.items) ? v.items : [] }));
 
   const machineryData = Object.entries(data.fcas?.machineryByType || {})
-    .filter(([, value]) => Number(value) > 0)
-    .map(([name, value]) => ({ name, value: Number(value) }));
+    .filter(([, v]) => (typeof v === 'number' ? v : v?.count ?? 0) > 0)
+    .map(([name, v]) => ({ name, value: Number(typeof v === 'number' ? v : (v?.count ?? 0)), key: name, items: Array.isArray(v?.items) ? v.items : [] }));
 
   return (
     <Layout>
@@ -169,6 +170,8 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-slate-100">
               <MetricCard title="Male Practitioners" value={data.practitioners.totalMale ?? 0} icon="mdi:gender-male" />
               <MetricCard title="Female Practitioners" value={data.practitioners.totalFemale ?? 0} icon="mdi:gender-female" />
+              <MetricCard title="PWD Practitioners" value={data.practitioners.totalPWD ?? 0} icon="mdi:wheelchair-accessibility" />
+              <MetricCard title="Senior Citizens" value={data.practitioners.totalSeniorCitizen ?? 0} icon="mdi:account-star-outline" />
             </div>
           </div>
 
@@ -311,6 +314,88 @@ export default function Dashboard() {
           document.body
         )}
 
+        {/* Shared Facilities Breakdown Modal */}
+        {facilityBreakdown && createPortal(
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 transition-opacity" onClick={() => setFacilityBreakdown(null)}>
+            <div className="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-6 sm:p-8 max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col border border-slate-100 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-palette-blue/10 flex items-center justify-center border border-palette-blue/20">
+                    <Icon icon="mdi:warehouse" className="text-2xl text-palette-blue" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-800">Shared Facilities — Breakdown</h2>
+                    <p className="text-sm text-slate-500 mt-0.5">{facilityBreakdown.name}</p>
+                  </div>
+                </div>
+                <button onClick={() => setFacilityBreakdown(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                  <Icon icon="mdi:close" className="text-2xl" />
+                </button>
+              </div>
+              <div className="overflow-y-auto flex-1 rounded-xl border border-slate-200 bg-slate-50/30 scrollbar-thin scrollbar-thumb-slate-200">
+                <table className="w-full text-sm text-left">
+                  <thead className="sticky top-0 bg-slate-100/90 backdrop-blur-sm border-b border-slate-200 text-slate-600 z-10">
+                    <tr>
+                      <th className="py-3.5 px-4 font-semibold">Name</th>
+                      <th className="py-3.5 px-4 font-semibold">Type</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {facilityBreakdown.items.map((item, i) => (
+                      <tr key={i} className="hover:bg-white transition-colors">
+                        <td className="py-3 px-4 font-medium text-slate-800">{item.fcaName}</td>
+                        <td className="py-3 px-4 text-slate-600">{item.typeOfFacilities || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Machinery Breakdown Modal */}
+        {machineryBreakdown && createPortal(
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 transition-opacity" onClick={() => setMachineryBreakdown(null)}>
+            <div className="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-6 sm:p-8 max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col border border-slate-100 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                    <Icon icon="mdi:tractor" className="text-2xl text-amber-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-800">Machinery & Equipment — Breakdown</h2>
+                    <p className="text-sm text-slate-500 mt-0.5">{machineryBreakdown.name}</p>
+                  </div>
+                </div>
+                <button onClick={() => setMachineryBreakdown(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                  <Icon icon="mdi:close" className="text-2xl" />
+                </button>
+              </div>
+              <div className="overflow-y-auto flex-1 rounded-xl border border-slate-200 bg-slate-50/30 scrollbar-thin scrollbar-thumb-slate-200">
+                <table className="w-full text-sm text-left">
+                  <thead className="sticky top-0 bg-slate-100/90 backdrop-blur-sm border-b border-slate-200 text-slate-600 z-10">
+                    <tr>
+                      <th className="py-3.5 px-4 font-semibold">Name</th>
+                      <th className="py-3.5 px-4 font-semibold">Type</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {machineryBreakdown.items.map((item, i) => (
+                      <tr key={i} className="hover:bg-white transition-colors">
+                        <td className="py-3 px-4 font-medium text-slate-800">{item.fcaName}</td>
+                        <td className="py-3 px-4 text-slate-600">{item.type || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
         {/* FCA Form Section */}
         <section id="fca-form" className="space-y-6 pt-6 mt-6 border-t border-slate-200">
           <div className="flex items-center gap-3 px-1">
@@ -333,11 +418,14 @@ export default function Dashboard() {
             </div>
 
             <div className="mt-8 pt-8 border-t border-slate-100">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                  <Icon icon="mdi:warehouse" className="text-xl text-slate-600" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <Icon icon="mdi:warehouse" className="text-xl text-slate-600" />
+                  </div>
+                  <h4 className="font-bold text-slate-800 text-lg">Shared Facilities and Capacities</h4>
                 </div>
-                <h4 className="font-bold text-slate-800 text-lg">Shared Facilities and Capacities</h4>
+                <p className="text-xs font-medium text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">Click a segment to view breakdown</p>
               </div>
               
               {sharedFacilitiesData.length > 0 ? (
@@ -357,7 +445,8 @@ export default function Dashboard() {
                         strokeWidth={3}
                         label={({ name, value }) => `${name}: ${value}`}
                         labelLine={{ stroke: CHART_AXIS, strokeWidth: 1 }}
-                        className="outline-none hover:opacity-90 transition-opacity"
+                        onClick={(entry) => entry?.items?.length > 0 && setFacilityBreakdown({ name: entry.name, items: entry.items })}
+                        className="cursor-pointer outline-none hover:opacity-90 transition-opacity"
                       >
                         {sharedFacilitiesData.map((_, i) => (
                           <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -376,11 +465,14 @@ export default function Dashboard() {
             </div>
 
             <div className="mt-8 pt-8 border-t border-slate-100">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                  <Icon icon="mdi:tractor" className="text-xl text-slate-600" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <Icon icon="mdi:tractor" className="text-xl text-slate-600" />
+                  </div>
+                  <h4 className="font-bold text-slate-800 text-lg">Machinery & Equipment</h4>
                 </div>
-                <h4 className="font-bold text-slate-800 text-lg">Machinery & Equipment</h4>
+                <p className="text-xs font-medium text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">Click a segment to view breakdown</p>
               </div>
 
               {machineryData.length > 0 ? (
@@ -400,7 +492,8 @@ export default function Dashboard() {
                         strokeWidth={3}
                         label={({ name, value }) => `${name}: ${value}`}
                         labelLine={{ stroke: CHART_AXIS, strokeWidth: 1 }}
-                        className="outline-none hover:opacity-90 transition-opacity"
+                        onClick={(entry) => entry?.items?.length > 0 && setMachineryBreakdown({ name: entry.name, items: entry.items })}
+                        className="cursor-pointer outline-none hover:opacity-90 transition-opacity"
                       >
                         {machineryData.map((_, i) => (
                           <Cell key={i} fill={COLORS[i % COLORS.length]} />

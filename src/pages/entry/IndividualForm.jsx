@@ -218,7 +218,7 @@ export default function IndividualForm() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <Select label="Sex" value={form.sex} onChange={(v) => update('sex', v)} options={SEX_OPTIONS} />
                     <Input label="Date of Birth" type="date" value={form.dateOfBirth} onChange={(v) => update('dateOfBirth', v)} />
-                    <Select label="PWD?" value={form.pwd} onChange={(v) => update('pwd', v)} options={['Yes', 'No']} />
+                    <Select label="PWD/Senior Citizen?" value={form.pwd} onChange={(v) => update('pwd', v)} options={['Yes', 'No']} />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-5">

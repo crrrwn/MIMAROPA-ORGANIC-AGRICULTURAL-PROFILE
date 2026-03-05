@@ -57,8 +57,7 @@ export default function IndividualFormsPage() {
   const { data, error } = useDashboardDataByProvince(province, selectedYear);
   const [commodityBreakdown, setCommodityBreakdown] = useState(null);
 
-  const currentYear = new Date().getFullYear();
-  const yearOptions = [null, ...Array.from({ length: currentYear - 2019 }, (_, i) => currentYear - i)];
+  const yearOptions = [null, 2030, 2029, 2028, 2027, 2026, 2025];
 
   const commoditiesData = [
     { name: 'Rice', key: 'rice', value: data.commodities?.rice?.totalArea ?? 0 },
@@ -157,6 +156,8 @@ export default function IndividualFormsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-slate-100">
               <MetricCard title="Male Practitioners" value={data.practitioners.totalMale ?? 0} icon="mdi:gender-male" />
               <MetricCard title="Female Practitioners" value={data.practitioners.totalFemale ?? 0} icon="mdi:gender-female" />
+              <MetricCard title="PWD Practitioners" value={data.practitioners.totalPWD ?? 0} icon="mdi:wheelchair-accessibility" />
+              <MetricCard title="Senior Citizens" value={data.practitioners.totalSeniorCitizen ?? 0} icon="mdi:account-star-outline" />
             </div>
           </div>
 
