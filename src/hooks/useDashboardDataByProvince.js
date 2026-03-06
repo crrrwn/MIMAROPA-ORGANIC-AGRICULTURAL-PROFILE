@@ -10,7 +10,7 @@ function emptyCommodity() {
 function emptyMetrics() {
   return {
     oaArea: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0 },
-    practitioners: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0, totalMale: 0, totalFemale: 0, totalPWD: 0, totalSeniorCitizen: 0 },
+    practitioners: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0, totalMale: 0, totalFemale: 0, totalPWD: 0, totalSeniorCitizen: 0, totalIP: 0, totalYouth: 0 },
     fcas: {
       engageInOA: 0,
       organicMembersMale: 0,
@@ -33,7 +33,7 @@ function emptyMetrics() {
 }
 
 function getDocYear(d) {
-  const dateStr = d.updatedAt || d.createdAt;
+  const dateStr = d.dateSubmitted || d.updatedAt || d.createdAt;
   if (!dateStr) return null;
   const y = new Date(dateStr).getFullYear();
   return Number.isNaN(y) ? null : y;
@@ -134,9 +134,14 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
           if (sex === 'male') target.practitioners.totalMale++;
           else if (sex === 'female') target.practitioners.totalFemale++;
 
-          const pwd = (d.pwd || '').toLowerCase();
-          if (pwd === 'yes') target.practitioners.totalPWD++;
-          else if (pwd === 'senior citizen') target.practitioners.totalSeniorCitizen++;
+          const pwdVal = (d.pwd || '').toLowerCase();
+          const seniorVal = (d.seniorCitizen || '').toLowerCase();
+          const ipVal = (d.ip || '').toLowerCase();
+          const youthVal = (d.youth || '').toLowerCase();
+          if (d.pwd === 'Yes' || pwdVal === 'yes') target.practitioners.totalPWD++;
+          if (d.seniorCitizen === 'Yes' || seniorVal === 'yes' || pwdVal === 'senior citizen') target.practitioners.totalSeniorCitizen++;
+          if (d.ip === 'Yes' || ipVal === 'yes') target.practitioners.totalIP++;
+          if (d.youth === 'Yes' || youthVal === 'yes') target.practitioners.totalYouth++;
         };
 
         const filterByYear = (d) => {
@@ -228,6 +233,8 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
           acc.practitioners.totalFemale += m.practitioners.totalFemale || 0;
           acc.practitioners.totalPWD += m.practitioners.totalPWD || 0;
           acc.practitioners.totalSeniorCitizen += m.practitioners.totalSeniorCitizen || 0;
+          acc.practitioners.totalIP += m.practitioners.totalIP || 0;
+          acc.practitioners.totalYouth += m.practitioners.totalYouth || 0;
           acc.fcas.engageInOA += m.fcas.engageInOA;
           acc.fcas.organicMembersMale += m.fcas.organicMembersMale || 0;
           acc.fcas.organicMembersFemale += m.fcas.organicMembersFemale || 0;

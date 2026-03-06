@@ -37,9 +37,14 @@ export default function IndividualForm() {
   const isEdit = !!id;
   const [loading, setLoading] = useState(isEdit);
   const [form, setForm] = useState({
+    rsbsaNumber: '',
     sex: '',
     dateOfBirth: '',
     pwd: 'No',
+    seniorCitizen: 'No',
+    ip: 'No',
+    youth: 'No',
+    dateSubmitted: new Date().toISOString().slice(0, 10),
     surname: '',
     firstName: '',
     middleName: '',
@@ -62,10 +67,16 @@ export default function IndividualForm() {
       getDoc(doc(db, 'individuals', id)).then((snap) => {
         if (snap.exists()) {
           const d = snap.data();
+          const legacyPwd = (d.pwd || '').toLowerCase();
           setForm({
+            rsbsaNumber: d.rsbsaNumber || '',
             sex: d.sex || '',
             dateOfBirth: d.dateOfBirth || '',
-            pwd: d.pwd || 'No',
+            pwd: d.pwd !== undefined ? (d.pwd === 'Yes' || legacyPwd === 'yes' ? 'Yes' : 'No') : 'No',
+            seniorCitizen: d.seniorCitizen !== undefined ? d.seniorCitizen : (legacyPwd === 'senior citizen' ? 'Yes' : 'No'),
+            ip: d.ip || 'No',
+            youth: d.youth || 'No',
+            dateSubmitted: d.dateSubmitted || (d.createdAt ? d.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10)),
             surname: d.surname || '',
             firstName: d.firstName || '',
             middleName: d.middleName || '',
@@ -113,7 +124,7 @@ export default function IndividualForm() {
 
   const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-  const completeName = [form.surname, form.firstName, form.middleName].filter(Boolean).join(' ') + (form.extension ? ` ${form.extension}` : '');
+  const completeName = (form.firstName || '') + ([form.surname, form.middleName, form.extension].filter(Boolean).length ? ', ' + [form.surname, form.middleName].filter(Boolean).join(' ') + (form.extension ? ' ' + form.extension : '') : '');
   const completeAddress = [form.barangay, form.municipality, form.province].filter(Boolean).join(', ');
 
   const addCommodity = () => {
@@ -145,8 +156,10 @@ export default function IndividualForm() {
     e.preventDefault();
     setLoading(true);
     const finalProvince = userProvince || form.province;
+    const submittedDate = (form.dateSubmitted && form.dateSubmitted.trim()) ? form.dateSubmitted : new Date().toISOString().slice(0, 10);
     const payload = {
       ...form,
+      dateSubmitted: submittedDate,
       completeName,
       completeAddress,
       province: finalProvince,
@@ -198,18 +211,18 @@ export default function IndividualForm() {
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
-          className="group inline-flex items-center gap-2 px-5 py-2.5 mb-2 text-sm font-semibold rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all active:scale-95 shadow-sm"
+          className="group inline-flex items-center gap-2 px-5 py-2.5 mb-2 text-sm font-semibold rounded-xl bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all active:scale-95 shadow-sm"
         >
           <Icon icon="mdi:arrow-left" className="text-lg group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
         </button>
 
         <form onSubmit={handleSubmit}>
-          <div className="bg-white rounded-[2rem] border border-slate-100 shadow-[0_2px_20px_rgb(0,0,0,0.04)] p-6 sm:p-10 relative overflow-hidden">
+          <div className="bg-white rounded-[2rem] border border-slate-300 shadow-[0_2px_20px_rgb(0,0,0,0.04)] p-6 sm:p-10 relative overflow-hidden">
             {/* Top Accent Line */}
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-palette-green via-palette-sky to-palette-blue"></div>
             
             {/* Form Header */}
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-8 border-b border-slate-100 mb-10">
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 pb-8 border-b border-slate-300 mb-10">
               <div className="flex items-start gap-5">
                 <div className="w-14 h-14 rounded-2xl bg-palette-green/10 flex items-center justify-center border border-palette-green/20 shrink-0 mt-1">
                   <Icon icon="mdi:account-edit-outline" className="text-3xl text-palette-green" />
@@ -223,7 +236,7 @@ export default function IndividualForm() {
                   </p>
                 </div>
               </div>
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold shadow-sm shrink-0 border ${isEdit ? 'bg-slate-50 text-slate-700 border-slate-200' : 'bg-palette-green text-white border-palette-green/20'}`}>
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold shadow-sm shrink-0 border ${isEdit ? 'bg-slate-50 text-slate-700 border-slate-300' : 'bg-palette-green text-white border-palette-green/20'}`}>
                 <Icon icon={isEdit ? 'mdi:pencil-outline' : 'mdi:plus-circle-outline'} className="text-lg" />
                 {isEdit ? 'Edit Mode' : 'New Entry'}
               </div>
@@ -232,10 +245,19 @@ export default function IndividualForm() {
             <div className="space-y-12">
               <Section title="1. Personal Information" icon="mdi:account-outline">
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <Input label="Date Submitted" type="date" value={form.dateSubmitted} onChange={(v) => update('dateSubmitted', v)} title="Petsa kung kailan isinumite ang form" />
+                    <Input label="RSBSA Number" value={form.rsbsaNumber} onChange={(v) => update('rsbsaNumber', v)} placeholder="e.g. 12345678" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <Select label="Sex" value={form.sex} onChange={(v) => update('sex', v)} options={SEX_OPTIONS} />
                     <Input label="Date of Birth" type="date" value={form.dateOfBirth} onChange={(v) => update('dateOfBirth', v)} />
-                    <Select label="PWD/Senior Citizen?" value={form.pwd} onChange={(v) => update('pwd', v)} options={['Yes', 'No']} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <Select label="PWD" value={form.pwd} onChange={(v) => update('pwd', v)} options={['Yes', 'No']} />
+                    <Select label="Senior Citizen" value={form.seniorCitizen} onChange={(v) => update('seniorCitizen', v)} options={['Yes', 'No']} />
+                    <Select label="IP (Indigenous Peoples)" value={form.ip} onChange={(v) => update('ip', v)} options={['Yes', 'No']} />
+                    <Select label="Youth" value={form.youth} onChange={(v) => update('youth', v)} options={['Yes', 'No']} />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
@@ -245,8 +267,8 @@ export default function IndividualForm() {
                     <Input label="Extension" value={form.extension} onChange={(v) => update('extension', v)} placeholder="e.g. Jr., III" />
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-white shadow-sm border border-slate-200 flex items-center justify-center shrink-0">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-300 flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-white shadow-sm border border-slate-300 flex items-center justify-center shrink-0">
                       <Icon icon="mdi:account-badge-outline" className="text-xl text-slate-400" />
                     </div>
                     <div>
@@ -255,7 +277,7 @@ export default function IndividualForm() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-5">
                     <Select label="Civil Status" value={form.civilStatus} onChange={(v) => update('civilStatus', v)} options={CIVIL_STATUS} />
                     <Input label="Mobile Number" type="tel" value={form.mobileNumber} onChange={(v) => update('mobileNumber', v)} />
                   </div>
@@ -266,8 +288,8 @@ export default function IndividualForm() {
                     <Select label="Province" value={form.province} onChange={(v) => update('province', v)} options={PROVINCES} required />
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-white shadow-sm border border-slate-200 flex items-center justify-center shrink-0">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-300 flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-white shadow-sm border border-slate-300 flex items-center justify-center shrink-0">
                       <Icon icon="mdi:map-marker-outline" className="text-xl text-slate-400" />
                     </div>
                     <div>
@@ -281,8 +303,8 @@ export default function IndividualForm() {
               <Section title="2. Agricultural Background" icon="mdi:sprout-outline">
                 <div className="space-y-6">
                   {form.farms.map((farm, idx) => (
-                    <div key={idx} className="relative p-6 bg-slate-50 rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors">
-                      <div className="flex justify-between items-center mb-5 pb-3 border-b border-slate-200/60">
+                    <div key={idx} className="relative p-6 bg-slate-50 rounded-2xl border border-slate-300 hover:border-slate-300 transition-colors">
+                      <div className="flex justify-between items-center mb-5 pb-3 border-b border-slate-300/60">
                         <span className="font-bold text-slate-700 flex items-center gap-2">
                           <Icon icon="mdi:barn" className="text-slate-400 text-lg" />
                           Farm #{idx + 1}
@@ -306,11 +328,11 @@ export default function IndividualForm() {
                     </div>
                   ))}
                   
-                  <button type="button" onClick={addFarm} className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl border-2 border-dashed border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 transition-all active:scale-95 text-sm">
+                  <button type="button" onClick={addFarm} className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 font-semibold hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 transition-all active:scale-95 text-sm">
                     <Icon icon="mdi:plus-circle-outline" className="text-lg" /> Add Another Farm
                   </button>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-6 border-t border-slate-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-6 border-t border-slate-300">
                     <Input label="Years in Organic Farming" type="number" value={form.yearsInOrganicFarming} onChange={(v) => update('yearsInOrganicFarming', v)} />
                     <Input label="Total Organic Area (ha)" type="number" step="0.01" value={form.organicArea} onChange={(v) => update('organicArea', v)} />
                   </div>
@@ -320,8 +342,8 @@ export default function IndividualForm() {
               <Section title="3. Organic Commodities & Products" icon="mdi:basket-outline">
                 <div className="space-y-4">
                   {form.commodities.map((c, idx) => (
-                    <div key={idx} className="relative p-6 bg-slate-50 rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors">
-                      <div className="flex justify-between items-center mb-5 pb-3 border-b border-slate-200/60">
+                    <div key={idx} className="relative p-6 bg-slate-50 rounded-2xl border border-slate-300 hover:border-slate-300 transition-colors">
+                      <div className="flex justify-between items-center mb-5 pb-3 border-b border-slate-300/60">
                         <span className="font-bold text-slate-700 flex items-center gap-2">
                           <Icon icon="mdi:leaf" className="text-slate-400 text-lg" />
                           Commodity #{idx + 1}
@@ -342,21 +364,21 @@ export default function IndividualForm() {
                       </div>
                     </div>
                   ))}
-                  <button type="button" onClick={addCommodity} className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl border-2 border-dashed border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 transition-all active:scale-95 text-sm">
+                  <button type="button" onClick={addCommodity} className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 font-semibold hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 transition-all active:scale-95 text-sm">
                     <Icon icon="mdi:plus-circle-outline" className="text-lg" /> Add Another Commodity
                   </button>
                 </div>
               </Section>
 
               <Section title="4. Attachments & Documents" icon="mdi:paperclip">
-                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-300">
                   <FileUpload value={form.attachments} onChange={(v) => update('attachments', v)} />
                 </div>
               </Section>
             </div>
 
             {/* Form Actions */}
-            <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-4">
+            <div className="mt-12 pt-8 border-t border-slate-300 flex flex-col sm:flex-row items-center gap-4">
               <button 
                 type="submit" 
                 disabled={loading} 
@@ -371,7 +393,7 @@ export default function IndividualForm() {
               <button 
                 type="button" 
                 onClick={() => navigate('/dashboard')} 
-                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 border-2 border-slate-200 bg-white text-slate-700 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all active:scale-95 text-lg"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 border-2 border-slate-300 bg-white text-slate-700 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all active:scale-95 text-lg"
               >
                 Cancel
               </button>
@@ -389,8 +411,8 @@ export default function IndividualForm() {
 function Section({ title, icon, children }) {
   return (
     <div className="mb-10 last:mb-0">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-        <div className="p-2 bg-slate-50 rounded-lg border border-slate-100 shrink-0">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-300">
+        <div className="p-2 bg-slate-50 rounded-lg border border-slate-300 shrink-0">
           <Icon icon={icon} className="text-xl text-slate-500" />
         </div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
@@ -416,7 +438,7 @@ function Input({ label, value, onChange, type = 'text', required, disabled, plac
         disabled={disabled}
         placeholder={placeholder}
         step={step}
-        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 focus:bg-white focus:ring-4 focus:ring-palette-green/10 focus:border-palette-green outline-none transition-all placeholder:text-slate-400 font-medium text-sm shadow-sm disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed" 
+        className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-800 focus:bg-white focus:ring-4 focus:ring-palette-green/10 focus:border-palette-green outline-none transition-all placeholder:text-slate-400 font-medium text-sm shadow-sm disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed" 
         {...rest} 
       />
     </div>
@@ -434,7 +456,7 @@ function Select({ label, value, onChange, options, required }) {
           value={value} 
           onChange={(e) => onChange(e.target.value)} 
           required={required}
-          className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-200 bg-white text-slate-800 focus:bg-white focus:ring-4 focus:ring-palette-green/10 focus:border-palette-green outline-none transition-all font-medium text-sm shadow-sm appearance-none cursor-pointer"
+          className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-300 bg-white text-slate-800 focus:bg-white focus:ring-4 focus:ring-palette-green/10 focus:border-palette-green outline-none transition-all font-medium text-sm shadow-sm appearance-none cursor-pointer"
         >
           <option value="" disabled className="text-slate-400">— Select an Option —</option>
           {options.map((o) => (

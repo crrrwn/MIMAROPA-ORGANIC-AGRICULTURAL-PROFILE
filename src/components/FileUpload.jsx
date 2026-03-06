@@ -85,8 +85,8 @@ function FileViewerModal({ item, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-elevated max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-100" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="bg-white rounded-2xl shadow-elevated max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border-2 border-slate-300" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b-2 border-slate-300">
           <span className="font-medium text-gray-900 truncate flex-1">{item.name}</span>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition">
             <Icon icon="mdi:close" className="text-xl text-gray-600" />
@@ -196,7 +196,7 @@ export function FileUpload({ value = [], onChange, disabled }) {
       {files.length > 0 && (
         <ul className="space-y-2 mt-2">
           {files.map((item, idx) => (
-            <li key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm border border-gray-100">
+            <li key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm border-2 border-slate-300">
               <span className="truncate flex-1 min-w-0" title={item.name}>{item.name}</span>
               <div className="flex gap-2 shrink-0">
                 <button type="button" onClick={() => viewFile(item)} className="px-3 py-1.5 rounded-lg bg-oa-blue/10 text-oa-blue hover:bg-oa-blue/20 font-medium transition flex items-center gap-1">

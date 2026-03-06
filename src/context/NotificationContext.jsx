@@ -27,7 +27,7 @@ export function NotificationProvider({ children }) {
   }, [hideNotification]);
 
   const iconMap = { success: 'mdi:check-circle', error: 'mdi:alert-circle', info: 'mdi:information' };
-  const bgMap = { success: 'bg-green-50 border-green-200', error: 'bg-red-50 border-red-200', info: 'bg-blue-50 border-blue-200' };
+  const bgMap = { success: 'bg-green-50 border-green-300', error: 'bg-red-50 border-red-300', info: 'bg-blue-50 border-blue-300' };
   const iconColorMap = { success: 'text-green-600', error: 'text-red-600', info: 'text-blue-600' };
 
   return (
@@ -36,7 +36,7 @@ export function NotificationProvider({ children }) {
       {notification.show && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={hideNotification}>
           <div
-            className={`rounded-2xl shadow-elevated border border-gray-100 p-6 max-w-sm w-full ${bgMap[notification.type] || bgMap.success}`}
+            className={`rounded-2xl shadow-elevated border-2 border-slate-300 p-6 max-w-sm w-full ${bgMap[notification.type] || bgMap.success}`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-4">

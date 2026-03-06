@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react';
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center font-poppins p-6 bg-[#F2F8ED]">
-      <div className="w-full max-w-md text-center p-8 rounded-2xl bg-white border border-slate-200 shadow-sm">
+      <div className="w-full max-w-md text-center p-8 rounded-2xl bg-white border border-slate-300 shadow-sm">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[#F2F8ED] border border-[#A7D9F7]/50 mb-5 overflow-hidden">
           <img src="/LOGO_OA.png" alt="OA Logo" className="w-11 h-11 object-contain rounded-lg" />
         </div>

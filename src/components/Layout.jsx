@@ -166,7 +166,7 @@ export default function Layout({ children }) {
       />
 
       {/* Mobile: top bar with hamburger */}
-      <header className="fixed top-0 left-0 right-0 z-30 flex sm:hidden items-center justify-between h-16 px-4 bg-[#F2F8ED] border-b border-[#A7D9F7]/50 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-30 flex sm:hidden items-center justify-between h-16 px-4 bg-[#F2F8ED] border-b-2 border-[#A7D9F7]/70 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -177,7 +177,7 @@ export default function Layout({ children }) {
             <Icon icon="mdi:menu" className="text-2xl" />
           </button>
           <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center gap-2.5 min-w-0">
-            <img src="/LOGO_OA.png" alt="" className="h-8 w-8 object-cover shrink-0 rounded-md shadow-sm border border-[#A7D9F7]/40" />
+            <img src="/LOGO_OA.png" alt="" className="h-8 w-8 object-cover shrink-0 rounded-md shadow-sm border-2 border-[#A7D9F7]/60" />
             <span className="font-bold text-sm text-[#2E749E] truncate">MIMAROPA OA</span>
           </Link>
         </div>
@@ -224,7 +224,7 @@ export default function Layout({ children }) {
           }`}
         >
           <div className="p-4 sm:p-6 lg:p-8 pt-20 sm:pt-6 lg:pt-8 min-h-screen flex flex-col min-w-0">
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-[0_4px_20px_rgba(167,217,247,0.15)] border border-[#A7D9F7]/30 flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-x-hidden">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-[0_4px_20px_rgba(167,217,247,0.15)] border-2 border-[#A7D9F7]/50 flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-x-hidden">
               {children}
             </div>
           </div>
@@ -234,7 +234,7 @@ export default function Layout({ children }) {
       {/* Entry Modal */}
       {showEntryModal && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#2E749E]/40 backdrop-blur-sm transition-opacity" onClick={() => setShowEntryModal(false)}>
-          <div className="bg-white rounded-[1.5rem] shadow-2xl p-6 sm:p-8 max-w-sm w-full border border-[#A7D9F7]/40 transform transition-all scale-100" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-[1.5rem] shadow-2xl p-6 sm:p-8 max-w-sm w-full border-2 border-[#A7D9F7]/60 transform transition-all scale-100" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 rounded-2xl bg-[#84BC40]/10 flex items-center justify-center border border-[#84BC40]/20 shrink-0">
                 <Icon icon="mdi:plus-box-multiple" className="text-2xl text-[#84BC40]" />
@@ -279,7 +279,7 @@ export default function Layout({ children }) {
       {/* Logout Confirm Modal */}
       {showLogoutConfirm && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#2E749E]/40 backdrop-blur-sm transition-opacity" onClick={() => setShowLogoutConfirm(false)}>
-          <div className="bg-white rounded-[1.5rem] shadow-2xl p-6 sm:p-8 max-w-sm w-full border border-[#A7D9F7]/40 transform transition-all scale-100" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-[1.5rem] shadow-2xl p-6 sm:p-8 max-w-sm w-full border-2 border-[#A7D9F7]/60 transform transition-all scale-100" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center border border-red-100 shrink-0">
                 <Icon icon="mdi:logout-variant" className="text-2xl text-red-500" />

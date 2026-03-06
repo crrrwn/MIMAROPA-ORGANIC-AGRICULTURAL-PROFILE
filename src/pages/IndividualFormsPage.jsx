@@ -29,7 +29,7 @@ const tooltipStyle = {
 
 function MetricCard({ title, value, icon }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+    <div className="bg-white rounded-xl border border-slate-300 shadow-sm p-5">
       <div className="flex items-start justify-between min-w-0">
         <div>
           <p className="text-[0.8rem] font-bold text-slate-500 uppercase tracking-wider mb-2">
@@ -72,7 +72,7 @@ export default function IndividualFormsPage() {
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500 min-w-0 overflow-x-hidden">
         {/* Header — same style as Dashboard: title + All Years in header */}
-        <div className="relative rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+        <div className="relative rounded-2xl bg-white border border-slate-300 shadow-sm overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-[#84BC40]/5 via-[#A7D9F7]/5 to-transparent pointer-events-none" />
           <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8">
             <div className="flex items-center gap-5">
@@ -91,7 +91,7 @@ export default function IndividualFormsPage() {
               <select
                 value={selectedYear ?? ''}
                 onChange={(e) => setSelectedYear(e.target.value === '' ? null : Number(e.target.value))}
-                className="py-2.5 pl-3 pr-9 rounded-xl text-sm font-semibold bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-[#84BC40]/30 focus:border-[#84BC40]/50 focus:outline-none cursor-pointer appearance-none"
+                className="py-2.5 pl-3 pr-9 rounded-xl text-sm font-semibold bg-slate-50 border border-slate-300 text-slate-700 focus:ring-2 focus:ring-[#84BC40]/30 focus:border-[#84BC40]/50 focus:outline-none cursor-pointer appearance-none"
                 style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.25em 1.25em' }}
               >
                 <option value="">All Years</option>
@@ -105,11 +105,11 @@ export default function IndividualFormsPage() {
 
         {/* Province filters (admin only) */}
         {isAdmin() && (
-          <div className="flex flex-wrap items-center gap-3 p-3 bg-white rounded-2xl w-fit border border-slate-200 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3 p-3 bg-white rounded-2xl w-fit border border-slate-300 shadow-sm">
             <div className="flex flex-wrap gap-2 px-1">
               <button
                 onClick={() => setSelectedProvince(null)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-95 ${selectedProvince === null ? 'bg-[#84BC40] text-white border-[#84BC40] shadow-sm' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50 border-slate-200'}`}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-95 ${selectedProvince === null ? 'bg-[#84BC40] text-white border-[#84BC40] shadow-sm' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50 border-slate-300'}`}
               >
                 All
               </button>
@@ -117,7 +117,7 @@ export default function IndividualFormsPage() {
                 <button
                   key={p}
                   onClick={() => setSelectedProvince(p)}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-95 ${selectedProvince === p ? 'bg-[#84BC40] text-white border-[#84BC40] shadow-sm' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50 border-slate-200'}`}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-95 ${selectedProvince === p ? 'bg-[#84BC40] text-white border-[#84BC40] shadow-sm' : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50 border-slate-300'}`}
                 >
                   {p}
                 </button>
@@ -135,10 +135,10 @@ export default function IndividualFormsPage() {
 
         <div className="space-y-6 pt-2">
           {/* OA Practitioners */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 relative overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-sm p-6 sm:p-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#84BC40]" />
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-lg bg-slate-50 border border-slate-200">
+              <div className="p-2 rounded-lg bg-slate-50 border border-slate-300">
                 <Icon icon="mdi:account-group-outline" className="text-xl text-slate-600" />
               </div>
               <h3 className="font-bold text-slate-800 text-lg">OA Practitioners</h3>
@@ -148,19 +148,21 @@ export default function IndividualFormsPage() {
               <MetricCard title="PGS Certified" value={data?.practitioners?.totalPGSCertified ?? 0} icon="mdi:certificate-outline" />
               <MetricCard title="3rd Party Certified" value={data?.practitioners?.total3rdParty ?? 0} icon="mdi:file-certificate-outline" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-slate-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-slate-300">
               <MetricCard title="Male Practitioners" value={data?.practitioners?.totalMale ?? 0} icon="mdi:gender-male" />
               <MetricCard title="Female Practitioners" value={data?.practitioners?.totalFemale ?? 0} icon="mdi:gender-female" />
               <MetricCard title="PWD Practitioners" value={data?.practitioners?.totalPWD ?? 0} icon="mdi:wheelchair-accessibility" />
               <MetricCard title="Senior Citizens" value={data?.practitioners?.totalSeniorCitizen ?? 0} icon="mdi:account-star-outline" />
+              <MetricCard title="IP (Indigenous Peoples)" value={data?.practitioners?.totalIP ?? 0} icon="mdi:account-group-outline" />
+              <MetricCard title="Youth" value={data?.practitioners?.totalYouth ?? 0} icon="mdi:account-school-outline" />
             </div>
           </div>
 
           {/* OA Area */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 relative overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-sm p-6 sm:p-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#2E749E]" />
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-lg bg-slate-50 border border-slate-200">
+              <div className="p-2 rounded-lg bg-slate-50 border border-slate-300">
                 <Icon icon="mdi:map-marker-path" className="text-xl text-slate-600" />
               </div>
               <h3 className="font-bold text-slate-800 text-lg">OA Area</h3>
@@ -173,19 +175,19 @@ export default function IndividualFormsPage() {
           </div>
 
           {/* Commodities */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 relative overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-sm p-6 sm:p-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#8D4A25]" />
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-slate-50 border border-slate-200">
+                <div className="p-2 rounded-lg bg-slate-50 border border-slate-300">
                   <Icon icon="mdi:chart-donut" className="text-xl text-slate-600" />
                 </div>
                 <h3 className="font-bold text-slate-800 text-lg">Commodities — Total Area (ha)</h3>
               </div>
-              <p className="text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">Click a segment to view breakdown</p>
+              <p className="text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-300">Click a segment to view breakdown</p>
             </div>
             {commoditiesData.length > 0 ? (
-              <div className="rounded-xl bg-slate-50/50 p-4 border border-slate-200">
+              <div className="rounded-xl bg-slate-50/50 p-4 border border-slate-300">
                 <ResponsiveContainer width="100%" height={320}>
                   <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                     <Pie
@@ -226,7 +228,7 @@ export default function IndividualFormsPage() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 px-4 bg-slate-50/50 rounded-xl border border-slate-200 border-dashed">
+              <div className="flex flex-col items-center justify-center py-12 px-4 bg-slate-50/50 rounded-xl border border-slate-300 border-dashed">
                 <Icon icon="mdi:chart-arc" className="text-4xl text-slate-300 mb-2" />
                 <p className="text-slate-500 font-medium text-sm">No commodity data available for this selection.</p>
               </div>
@@ -234,10 +236,10 @@ export default function IndividualFormsPage() {
           </div>
 
           {/* PGS Individual */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 relative overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-300 shadow-sm p-6 sm:p-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#84BC40]" />
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-lg bg-slate-50 border border-slate-200">
+              <div className="p-2 rounded-lg bg-slate-50 border border-slate-300">
                 <Icon icon="mdi:check-decagram-outline" className="text-xl text-slate-600" />
               </div>
               <h3 className="font-bold text-slate-800 text-lg">PGS (Individual)</h3>
@@ -255,7 +257,7 @@ export default function IndividualFormsPage() {
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 transition-opacity"
             onClick={() => setCommodityBreakdown(null)}
           >
-            <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col border border-slate-200 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col border border-slate-300 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-[#84BC40]/10 flex items-center justify-center border border-[#84BC40]/30">
@@ -271,9 +273,9 @@ export default function IndividualFormsPage() {
                 </button>
               </div>
               
-              <div className="overflow-y-auto flex-1 rounded-xl border border-slate-200 bg-slate-50/30 scrollbar-thin scrollbar-thumb-slate-200">
+              <div className="overflow-y-auto flex-1 rounded-xl border border-slate-300 bg-slate-50/30 scrollbar-thin scrollbar-thumb-slate-200">
                 <table className="w-full text-sm text-left">
-                  <thead className="sticky top-0 bg-slate-100/90 backdrop-blur-sm border-b border-slate-200 text-slate-600 z-10">
+                  <thead className="sticky top-0 bg-slate-100/90 backdrop-blur-sm border-b border-slate-300 text-slate-600 z-10">
                     <tr>
                       <th className="py-3.5 px-4 font-semibold">Name</th>
                       <th className="py-3.5 px-4 font-semibold">Products</th>
@@ -281,7 +283,7 @@ export default function IndividualFormsPage() {
                       <th className="py-3.5 px-4 font-semibold text-right">Volume (kg)</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-slate-300">
                     {commodityBreakdown.items.map((item, i) => (
                       <tr key={i} className="hover:bg-white transition-colors">
                         <td className="py-3 px-4 font-medium text-slate-800">{item.name}</td>

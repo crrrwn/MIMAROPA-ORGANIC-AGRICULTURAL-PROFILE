@@ -47,9 +47,9 @@ body {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-oa-green hover:bg-oa-green-dark text-white font-medium rounded-lg shadow-sm hover:shadow transition-all duration-200;
   }
   .card-base {
-    @apply bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200;
+    @apply bg-white rounded-xl border-2 border-slate-300 shadow-sm hover:shadow-md transition-shadow duration-200;
   }
   .input-base {
-    @apply w-full px-4 py-2.5 border border-gray-200 rounded-lg text-oa-brown placeholder:text-gray-400 focus:border-oa-green focus:ring-2 focus:ring-oa-green/25 outline-none transition-all duration-150;
+    @apply w-full px-4 py-2.5 border-2 border-slate-300 rounded-lg text-oa-brown placeholder:text-gray-400 focus:border-oa-green focus:ring-2 focus:ring-oa-green/25 outline-none transition-all duration-150;
   }
 }

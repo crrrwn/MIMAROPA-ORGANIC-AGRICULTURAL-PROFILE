@@ -107,7 +107,7 @@ export default function SystemLogsPage() {
   return (
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500 min-w-0 overflow-x-hidden">
-        <div className="relative rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+        <div className="relative rounded-2xl bg-white border border-slate-300 shadow-sm overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-[#2E749E]/5 via-[#A7D9F7]/5 to-transparent pointer-events-none" />
           <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8">
             <div className="flex items-center gap-5">
@@ -125,11 +125,11 @@ export default function SystemLogsPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3 p-4 bg-white rounded-2xl border border-slate-300 shadow-sm">
           <select
             value={filterAction}
             onChange={handleFilterChange(setFilterAction)}
-            className="py-2 pl-3 pr-9 rounded-xl text-sm font-medium bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-[#2E749E]/30 focus:border-[#2E749E]/50 outline-none"
+            className="py-2 pl-3 pr-9 rounded-xl text-sm font-medium bg-slate-50 border border-slate-300 text-slate-700 focus:ring-2 focus:ring-[#2E749E]/30 focus:border-[#2E749E]/50 outline-none"
           >
             {ACTION_OPTIONS.map((opt) => (
               <option key={opt.value || 'all'} value={opt.value}>{opt.label}</option>
@@ -140,20 +140,20 @@ export default function SystemLogsPage() {
             placeholder="Search by email..."
             value={filterEmail}
             onChange={handleFilterChange(setFilterEmail)}
-            className="py-2 px-3 rounded-xl text-sm border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-[#2E749E]/30 focus:border-[#2E749E]/50 outline-none w-48"
+            className="py-2 px-3 rounded-xl text-sm border border-slate-300 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-[#2E749E]/30 focus:border-[#2E749E]/50 outline-none w-48"
           />
           <input
             type="date"
             value={filterDateFrom}
             onChange={handleFilterChange(setFilterDateFrom)}
-            className="py-2 px-3 rounded-xl text-sm border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-[#2E749E]/30 outline-none"
+            className="py-2 px-3 rounded-xl text-sm border border-slate-300 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-[#2E749E]/30 outline-none"
             title="From date"
           />
           <input
             type="date"
             value={filterDateTo}
             onChange={handleFilterChange(setFilterDateTo)}
-            className="py-2 px-3 rounded-xl text-sm border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-[#2E749E]/30 outline-none"
+            className="py-2 px-3 rounded-xl text-sm border border-slate-300 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-[#2E749E]/30 outline-none"
             title="To date"
           />
         </div>
@@ -170,10 +170,10 @@ export default function SystemLogsPage() {
             <div className="w-10 h-10 border-4 border-[#2E749E]/30 border-t-[#2E749E] rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden overflow-x-auto">
+          <div className="rounded-2xl border border-slate-300 bg-white shadow-sm overflow-hidden overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
+                <tr className="bg-slate-50 border-b border-slate-300">
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Time</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Action</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">User</th>
@@ -228,7 +228,7 @@ export default function SystemLogsPage() {
               <button
                 onClick={() => setCurrentPage(1)}
                 disabled={safePage === 1}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-lg border border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="First page"
               >
                 <Icon icon="mdi:chevron-double-left" className="text-base" />
@@ -236,7 +236,7 @@ export default function SystemLogsPage() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={safePage === 1}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-lg border border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Previous page"
               >
                 <Icon icon="mdi:chevron-left" className="text-base" />
@@ -258,7 +258,7 @@ export default function SystemLogsPage() {
                       className={`min-w-[2rem] h-8 px-2 rounded-lg text-sm font-medium border transition-colors ${
                         p === safePage
                           ? 'bg-[#2E749E] text-white border-[#2E749E] shadow-sm'
-                          : 'border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                          : 'border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-slate-800'
                       }`}
                     >
                       {p}
@@ -268,7 +268,7 @@ export default function SystemLogsPage() {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={safePage === totalPages}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-lg border border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Next page"
               >
                 <Icon icon="mdi:chevron-right" className="text-base" />
@@ -276,7 +276,7 @@ export default function SystemLogsPage() {
               <button
                 onClick={() => setCurrentPage(totalPages)}
                 disabled={safePage === totalPages}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-lg border border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Last page"
               >
                 <Icon icon="mdi:chevron-double-right" className="text-base" />
