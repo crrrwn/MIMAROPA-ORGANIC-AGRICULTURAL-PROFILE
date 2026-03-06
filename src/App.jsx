@@ -13,6 +13,7 @@ import IndividualFormsPage from './pages/IndividualFormsPage';
 import FCAFormsPage from './pages/FCAFormsPage';
 import IndividualForm from './pages/entry/IndividualForm';
 import FCAForm from './pages/entry/FCAForm';
+import SystemLogsPage from './pages/admin/SystemLogsPage';
 
 function PrivateRoute({ children, adminOnly, encoderOnly }) {
   const { user, userProfile, loading } = useAuth();
@@ -71,6 +72,14 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <FCAFormsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/system-logs"
+        element={
+          <PrivateRoute adminOnly>
+            <SystemLogsPage />
           </PrivateRoute>
         }
       />

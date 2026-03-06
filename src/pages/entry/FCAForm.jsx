@@ -8,6 +8,7 @@ import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { PROVINCES } from '../../constants';
 import { FileUpload } from '../../components/FileUpload';
+import { logAction } from '../../services/systemLogs';
 
 const CERTIFICATION_OPTIONS = ['PGS Accredited', 'Applying for Accreditation', 'Engaged Organic Farming'];
 
@@ -35,7 +36,7 @@ const SPECIALIZATION_OPTIONS = [
 const SPECIALIZATION_REQUIRES_SPECIFY = ['OTHERS'];
 
 export default function FCAForm() {
-  const { getProvince } = useAuth();
+  const { getProvince, userProfile, user } = useAuth();
   const { showNotification } = useNotification();
   const province = getProvince();
   const navigate = useNavigate();
@@ -179,12 +180,28 @@ export default function FCAForm() {
     try {
       if (isEdit) {
         await updateDoc(doc(db, 'fcas', id), payload);
+        logAction({
+          action: 'fca_update',
+          userId: user?.uid,
+          userEmail: userProfile?.email ?? user?.email,
+          role: userProfile?.role,
+          province: userProfile?.province ?? getProvince(),
+          details: { formId: id },
+        }).catch(() => {});
         showNotification('FCA form updated successfully.');
       } else {
-        await addDoc(collection(db, 'fcas'), {
+        const ref = await addDoc(collection(db, 'fcas'), {
           ...payload,
           createdAt: new Date().toISOString(),
         });
+        logAction({
+          action: 'fca_create',
+          userId: user?.uid,
+          userEmail: userProfile?.email ?? user?.email,
+          role: userProfile?.role,
+          province: userProfile?.province ?? getProvince(),
+          details: { formId: ref.id },
+        }).catch(() => {});
         showNotification('FCA form submitted successfully.');
       }
       navigate('/dashboard');

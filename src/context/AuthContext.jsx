@@ -9,6 +9,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import { PROVINCES } from '../constants';
+import { logAction } from '../services/systemLogs';
 
 const AuthContext = createContext(null);
 
@@ -66,6 +67,13 @@ export function AuthProvider({ children }) {
     setUser(userCred.user);
     setUserProfile(profile);
     setLoading(false);
+    logAction({
+      action: 'login',
+      userId: userCred.user.uid,
+      userEmail: userCred.user.email || profile?.email,
+      role: profile?.role ?? null,
+      province: profile?.province ?? province ?? null,
+    }).catch(() => {});
     if (rememberMe) {
       localStorage.setItem('rememberMe_email', email);
       localStorage.setItem('rememberMe_role', role);
@@ -91,6 +99,13 @@ export function AuthProvider({ children }) {
     setUser(userCred.user);
     setUserProfile(profileData);
     setLoading(false);
+    logAction({
+      action: 'register',
+      userId: userCred.user.uid,
+      userEmail: userCred.user.email || email,
+      role: role ?? null,
+      province: province ?? null,
+    }).catch(() => {});
     return userCred;
   };
 

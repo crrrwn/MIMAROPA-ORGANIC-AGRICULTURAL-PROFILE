@@ -8,6 +8,7 @@ import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { PROVINCES } from '../../constants';
 import { FileUpload } from '../../components/FileUpload';
+import { logAction } from '../../services/systemLogs';
 
 const SEX_OPTIONS = ['Male', 'Female'];
 const CIVIL_STATUS = ['Single', 'Married', 'Widowed', 'Separated', 'Solo Parent'];
@@ -28,7 +29,7 @@ const EMPTY_FARM = {
 };
 
 export default function IndividualForm() {
-  const { getProvince } = useAuth();
+  const { getProvince, userProfile, user } = useAuth();
   const { showNotification } = useNotification();
   const userProvince = getProvince();
   const navigate = useNavigate();
@@ -157,12 +158,28 @@ export default function IndividualForm() {
     try {
       if (isEdit) {
         await updateDoc(doc(db, 'individuals', id), payload);
+        logAction({
+          action: 'individual_update',
+          userId: user?.uid,
+          userEmail: userProfile?.email ?? user?.email,
+          role: userProfile?.role,
+          province: userProfile?.province ?? getProvince(),
+          details: { formId: id },
+        }).catch(() => {});
         showNotification('Individual form updated successfully.');
       } else {
-        await addDoc(collection(db, 'individuals'), {
+        const ref = await addDoc(collection(db, 'individuals'), {
           ...payload,
           createdAt: new Date().toISOString(),
         });
+        logAction({
+          action: 'individual_create',
+          userId: user?.uid,
+          userEmail: userProfile?.email ?? user?.email,
+          role: userProfile?.role,
+          province: userProfile?.province ?? getProvince(),
+          details: { formId: ref.id },
+        }).catch(() => {});
         showNotification('Individual form submitted successfully.');
       }
       navigate('/dashboard');

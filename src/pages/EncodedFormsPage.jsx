@@ -9,11 +9,12 @@ import { FileList } from '../components/FileUpload';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useFormEntries } from '../hooks/useFormEntries';
+import { logAction } from '../services/systemLogs';
 
 const PAGE_SIZE = 20;
 
 export default function EncodedFormsPage() {
-  const { isAdmin, getProvince } = useAuth();
+  const { isAdmin, getProvince, userProfile, user } = useAuth();
   const { showNotification } = useNotification();
   const province = isAdmin() ? null : getProvince();
   const { individuals, fcas, refresh } = useFormEntries(province);
@@ -49,6 +50,14 @@ export default function EncodedFormsPage() {
     if (!deleteConfirm.id || !deleteConfirm.type) return;
     try {
       await deleteDoc(doc(db, deleteConfirm.type, deleteConfirm.id));
+      logAction({
+        action: 'form_delete',
+        userId: user?.uid,
+        userEmail: userProfile?.email ?? user?.email,
+        role: userProfile?.role,
+        province: userProfile?.province ?? getProvince(),
+        details: { type: deleteConfirm.type, id: deleteConfirm.id },
+      }).catch(() => {});
       refresh();
       setDeleteConfirm({ show: false, id: null, type: null });
       showNotification('Form deleted successfully.');

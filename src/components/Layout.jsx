@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Icon } from '@iconify/react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { logAction } from '../services/systemLogs';
 
 const SIDEBAR_COLLAPSED_KEY = 'mimaropa-sidebar-collapsed';
 
@@ -13,8 +14,12 @@ const NAV_ITEMS = [
   { to: '/encoded-forms', icon: 'mdi:file-document-multiple', label: 'Encoded Forms', match: (path) => path === '/encoded-forms' },
 ];
 
+const ADMIN_NAV_ITEMS = [
+  { to: '/system-logs', icon: 'mdi:clipboard-list-outline', label: 'System Logs', match: (path) => path === '/system-logs' },
+];
+
 export default function Layout({ children }) {
-  const { userProfile, signOut, isAdmin } = useAuth();
+  const { user, userProfile, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -42,6 +47,13 @@ export default function Layout({ children }) {
   const handleLogoutConfirm = (confirm) => {
     setShowLogoutConfirm(false);
     if (confirm) {
+      logAction({
+        action: 'logout',
+        userId: user?.uid ?? null,
+        userEmail: userProfile?.email ?? user?.email ?? null,
+        role: userProfile?.role ?? null,
+        province: userProfile?.province ?? null,
+      }).catch(() => {});
       signOut();
       navigate('/');
     }
@@ -71,12 +83,16 @@ export default function Layout({ children }) {
             <div className="bg-[#F2F8ED] p-1 rounded-xl shadow-sm shrink-0">
               <img src="/LOGO_OA.png" alt="OA Logo" className="h-8 w-8 object-contain rounded-lg" />
             </div>
-            {!collapsed && (
+            <span
+              className={`inline-block overflow-hidden whitespace-nowrap transition-all duration-200 ${
+                collapsed ? 'max-w-0 opacity-0 min-w-0' : 'max-w-[12rem] opacity-100 delay-150'
+              }`}
+            >
               <span className="text-white font-bold text-lg leading-tight truncate tracking-wide drop-shadow-sm">
                 MIMAROPA
                 <span className="block text-xs font-semibold text-white/80 mt-0.5 uppercase tracking-wider">Organic Profile</span>
               </span>
-            )}
+            </span>
           </Link>
           <button type="button" onClick={closeMobileMenu} className="sm:hidden p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors active:scale-95 shrink-0" aria-label="Close menu">
             <Icon icon="mdi:close" className="text-xl" />
@@ -94,7 +110,7 @@ export default function Layout({ children }) {
                 title="New Entry"
               >
                 <Icon icon="mdi:plus-circle" className="text-xl shrink-0" />
-                {!collapsed && <span>New Entry</span>}
+                <span className={`inline-block overflow-hidden whitespace-nowrap transition-all duration-200 ${collapsed ? 'max-w-0 opacity-0 min-w-0' : 'max-w-[5rem] opacity-100 delay-150'}`}>New Entry</span>
               </button>
             </div>
           )}
@@ -103,7 +119,16 @@ export default function Layout({ children }) {
             return (
               <Link key={to} to={to} onClick={closeMobileMenu} className={linkClass(isActive)} title={collapsed ? label : undefined}>
                 <Icon icon={icon} className={`text-xl shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                {!collapsed && <span className="truncate">{label}</span>}
+                <span className={`inline-block overflow-hidden whitespace-nowrap transition-all duration-200 ${collapsed ? 'max-w-0 opacity-0 min-w-0' : 'max-w-[10rem] opacity-100 delay-150'}`}>{label}</span>
+              </Link>
+            );
+          })}
+          {isAdmin() && ADMIN_NAV_ITEMS.map(({ to, icon, label, match }) => {
+            const isActive = match(location.pathname);
+            return (
+              <Link key={to} to={to} onClick={closeMobileMenu} className={linkClass(isActive)} title={collapsed ? label : undefined}>
+                <Icon icon={icon} className={`text-xl shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <span className={`inline-block overflow-hidden whitespace-nowrap transition-all duration-200 ${collapsed ? 'max-w-0 opacity-0 min-w-0' : 'max-w-[10rem] opacity-100 delay-150'}`}>{label}</span>
               </Link>
             );
           })}
@@ -115,13 +140,13 @@ export default function Layout({ children }) {
             <div className="p-1.5 bg-white/80 rounded-lg shrink-0 border border-[#A7D9F7]/50 shadow-sm">
               <Icon icon={userProfile?.role === 'admin' ? 'mdi:shield-account' : 'mdi:account'} className="text-lg text-[#84BC40]" />
             </div>
-            {!collapsed && <span className="truncate">{userProfile?.province || (userProfile?.role === 'admin' ? 'Admin' : 'User')}</span>}
+            <span className={`inline-block overflow-hidden whitespace-nowrap transition-all duration-200 ${collapsed ? 'max-w-0 opacity-0 min-w-0' : 'max-w-[8rem] opacity-100 delay-150 truncate'}`}>{userProfile?.province || (userProfile?.role === 'admin' ? 'Admin' : 'User')}</span>
           </div>
           <button onClick={handleLogoutClick} className={`group flex items-center text-red-600 hover:text-red-700 font-medium text-sm hover:bg-red-50/80 transition-all duration-200 rounded-xl active:scale-95 ${collapsed ? 'justify-center w-10 h-10 p-0 mt-1' : 'gap-3 w-full px-2 py-2.5'}`} title={collapsed ? 'Logout' : undefined}>
             <div className="p-1.5 shrink-0 rounded-lg flex items-center justify-center">
               <Icon icon="mdi:logout" className="text-lg text-red-600 group-hover:text-red-700 group-hover:-translate-x-0.5 transition-all" />
             </div>
-            {!collapsed && <span>Logout</span>}
+            <span className={`inline-block overflow-hidden whitespace-nowrap transition-all duration-200 ${collapsed ? 'max-w-0 opacity-0 min-w-0' : 'max-w-[4rem] opacity-100 delay-150'}`}>Logout</span>
           </button>
         </div>
       </div>
@@ -163,9 +188,10 @@ export default function Layout({ children }) {
         <aside
           style={{
             background: 'linear-gradient(180deg, #84BC40 0%, #8D4A25 22%, #2E749E 42%, #1E88E5 60%, #A7D9F7 78%, #F2F8ED 100%)',
+            transition: 'width 350ms cubic-bezier(0.4, 0, 0.2, 1)',
+            willChange: 'width',
           }}
           className={`fixed inset-y-0 left-0 z-50 flex flex-col h-screen overflow-hidden shadow-[4px_0_24px_rgba(46,116,158,0.2)]
-            transition-[width] duration-300 ease-in-out
             ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
             sm:translate-x-0 sm:z-30
             ${collapsed ? 'w-[6rem]' : 'w-[17.5rem]'}
@@ -180,7 +206,8 @@ export default function Layout({ children }) {
           onClick={() => setCollapsed(!collapsed)}
           style={{
             left: collapsed ? 'calc(6rem - 14px)' : 'calc(17.5rem - 14px)',
-            transition: 'left 0.3s ease-in-out',
+            transition: 'left 350ms cubic-bezier(0.4, 0, 0.2, 1)',
+            willChange: 'left',
           }}
           className="fixed top-6 z-40 hidden sm:flex w-7 h-7 items-center justify-center rounded-full bg-white/95 text-[#2E749E] shadow-sm ring-1 ring-[#A7D9F7]/30 hover:ring-[#2E749E]/40 hover:shadow hover:bg-white active:scale-90"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -191,7 +218,8 @@ export default function Layout({ children }) {
 
         {/* Main content — min-w-0 + overflow-x-hidden to prevent horizontal scroll on small screens */}
         <main
-          className={`flex-1 min-w-0 mx-auto w-full max-w-full bg-[#F2F8ED] transition-[padding-left] duration-300 ease-in-out overflow-x-hidden ${
+          style={{ transition: 'padding-left 350ms cubic-bezier(0.4, 0, 0.2, 1)', willChange: 'padding-left' }}
+          className={`flex-1 min-w-0 mx-auto w-full max-w-full bg-[#F2F8ED] overflow-x-hidden ${
             collapsed ? 'sm:pl-[6rem]' : 'sm:pl-[17.5rem]'
           }`}
         >

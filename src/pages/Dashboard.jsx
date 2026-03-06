@@ -198,7 +198,7 @@ export default function Dashboard() {
             </div>
             {commoditiesData.length > 0 ? (
               <div className="rounded-xl bg-slate-50/50 p-4 border border-slate-200">
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={320} debounce={300}>
                   <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                     <Pie
                       data={commoditiesData}
@@ -425,7 +425,7 @@ export default function Dashboard() {
               
               {sharedFacilitiesData.length > 0 ? (
                 <div className="rounded-xl bg-slate-50/50 p-4 border border-slate-200">
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={300} debounce={300}>
                     <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                       <Pie
                         data={sharedFacilitiesData}
@@ -472,7 +472,7 @@ export default function Dashboard() {
 
               {machineryData.length > 0 ? (
                 <div className="rounded-xl bg-slate-50/50 p-4 border border-slate-200">
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={300} debounce={300}>
                     <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                       <Pie
                         data={machineryData}
@@ -528,7 +528,7 @@ export default function Dashboard() {
                   <h3 className="font-bold text-slate-800 text-lg">OA Area (ha) by Province</h3>
                 </div>
                 <div className="rounded-xl bg-slate-50/50 p-4 border border-slate-200">
-                  <ResponsiveContainer width="100%" height={340}>
+                  <ResponsiveContainer width="100%" height={340} debounce={300}>
                     <BarChart
                       data={PROVINCES.map((p) => {
                         const m = perProvince[p];
@@ -581,7 +581,7 @@ export default function Dashboard() {
                   <h3 className="font-bold text-slate-800 text-lg">Practitioners by Province</h3>
                 </div>
                 <div className="rounded-xl bg-slate-50/50 p-4 border border-slate-200">
-                  <ResponsiveContainer width="100%" height={340}>
+                  <ResponsiveContainer width="100%" height={340} debounce={300}>
                     <BarChart
                       data={PROVINCES.map((p) => {
                         const m = perProvince[p];
