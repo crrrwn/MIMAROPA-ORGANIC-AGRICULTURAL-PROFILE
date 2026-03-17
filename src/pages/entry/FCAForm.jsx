@@ -12,7 +12,7 @@ import { logAction } from '../../services/systemLogs';
 
 const CERTIFICATION_OPTIONS = ['PGS Accredited', 'Applying for Accreditation', 'Engaged Organic Farming'];
 
-const DATE_OF_REGISTRATION_OPTIONS = ['SEC', 'DOLE', 'CDA', 'NCIP', 'DTI', 'OTHERS'];
+const REGISTRATION_OPTIONS = ['SEC', 'DOLE', 'CDA', 'NCIP', 'DTI'];
 
 const SPECIALIZATION_OPTIONS = [
   'GRAINS',
@@ -57,8 +57,8 @@ export default function FCAForm() {
     headName: '',
     headDesignation: '',
     headMobile: '',
+    registration: '',
     dateOfRegistration: '',
-    dateOfRegistrationOthers: '',
     contactName: '',
     contactDesignation: '',
     contactMobile: '',
@@ -87,8 +87,8 @@ export default function FCAForm() {
             headName: d.headName || '',
             headDesignation: d.headDesignation || '',
             headMobile: d.headMobile || '',
-            dateOfRegistration: d.dateOfRegistration || '',
-            dateOfRegistrationOthers: d.dateOfRegistrationOthers || '',
+            registration: d.registration || (['SEC', 'DOLE', 'CDA', 'NCIP', 'DTI'].includes(d.dateOfRegistration) ? d.dateOfRegistration : ''),
+            dateOfRegistration: d.dateOfRegistration && /^\d{4}-\d{2}-\d{2}$/.test(d.dateOfRegistration) ? d.dateOfRegistration : (d.registrationDate || ''),
             contactName: d.contactName || '',
             contactDesignation: d.contactDesignation || '',
             contactMobile: d.contactMobile || '',
@@ -302,10 +302,8 @@ export default function FCAForm() {
                   <div>
                     <h3 className="flex items-center gap-2 text-base font-bold text-slate-800 mb-4"><Icon icon="mdi:card-account-phone-outline" className="text-palette-blue text-xl"/> Registration/Date of Registration</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-5">
-                      <Select label="Date of Registration" value={form.dateOfRegistration} onChange={(v) => update('dateOfRegistration', v)} options={DATE_OF_REGISTRATION_OPTIONS} />
-                      {form.dateOfRegistration === 'OTHERS' && (
-                        <Input label="Others (specify)" value={form.dateOfRegistrationOthers} onChange={(v) => update('dateOfRegistrationOthers', v)} placeholder="Type here..." />
-                      )}
+                      <Select label="Registration" value={form.registration} onChange={(v) => update('registration', v)} options={REGISTRATION_OPTIONS} />
+                      <Input label="Date of Registration" type="date" value={form.dateOfRegistration} onChange={(v) => update('dateOfRegistration', v)} />
                     </div>
                   </div>
                 </div>

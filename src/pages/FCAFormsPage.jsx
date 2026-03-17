@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { useDashboardDataByProvince } from '../hooks/useDashboardDataByProvince';
 import { PROVINCES } from '../constants';
 
-const COLORS = ['#88BC44', '#3E6F8F', '#1E7CC8', '#F1F5E8', '#2a6bb5', '#4a7a6e'];
+const COLORS = ['#88BC44', '#3E6F8F', '#1E7CC8', '#8D4A25', '#2a6bb5', '#4a7a6e'];
 const CHART_AXIS = '#64748b'; // slate-500
 const tooltipStyle = {
   borderRadius: '16px',

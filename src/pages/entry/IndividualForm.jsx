@@ -14,6 +14,7 @@ const SEX_OPTIONS = ['Male', 'Female'];
 const CIVIL_STATUS = ['Single', 'Married', 'Widowed', 'Separated', 'Solo Parent'];
 const CERTIFICATION_OPTIONS = ['Devoted of Area', 'PGS', '3rd Party Certified'];
 const COMMODITY_OPTIONS = ['Rice', 'Corn', 'Vegetables (Specify)', 'Livestock & Poultry (Specify)', 'Fertilizer (Specify)', 'Others (Specify)'];
+const ANNUAL_VOLUME_UNIT_OPTIONS = ['Kg', 'Head', 'Live weight', 'Dressed weight', 'Piece/s', 'Tray'];
 const LAND_TENURE_OPTIONS = ['Owned', 'Co-Owned', 'Rent/Lease (Year/s)', 'Usufruct (Year/s)', 'Tenancy'];
 const ANCESTRAL_DOMAIN_OPTIONS = [
   'Certificate of Ancestral Domain',
@@ -58,7 +59,7 @@ export default function IndividualForm() {
     certification: '',
     yearsInOrganicFarming: '',
     organicArea: '',
-    commodities: [{ commodity: '', products: '', sizeOfArea: '', annualVolume: '', pricePerUnit: '', certification: '' }],
+    commodities: [{ commodity: '', products: '', sizeOfArea: '', annualVolumeUnit: '', annualVolume: '', pricePerUnit: '', certification: '' }],
     attachments: [],
   });
 
@@ -109,11 +110,12 @@ export default function IndividualForm() {
                   commodity: c.commodity || '',
                   products: c.products || '',
                   sizeOfArea: c.sizeOfArea || '',
+                  annualVolumeUnit: c.annualVolumeUnit || '',
                   annualVolume: c.annualVolume || '',
                   pricePerUnit: c.pricePerUnit || '',
                   certification: c.certification || '',
                 }))
-              : [{ commodity: '', products: '', sizeOfArea: '', annualVolume: '', pricePerUnit: '', certification: '' }],
+              : [{ commodity: '', products: '', sizeOfArea: '', annualVolumeUnit: '', annualVolume: '', pricePerUnit: '', certification: '' }],
             attachments: Array.isArray(d.attachments) ? d.attachments : [],
           });
         }
@@ -130,7 +132,7 @@ export default function IndividualForm() {
   const addCommodity = () => {
     setForm((f) => ({
       ...f,
-      commodities: [...f.commodities, { commodity: '', products: '', sizeOfArea: '', annualVolume: '', pricePerUnit: '', certification: '' }],
+      commodities: [...f.commodities, { commodity: '', products: '', sizeOfArea: '', annualVolumeUnit: '', annualVolume: '', pricePerUnit: '', certification: '' }],
     }));
   };
 
@@ -358,7 +360,10 @@ export default function IndividualForm() {
                         <Select label="Commodity Category" value={c.commodity} onChange={(v) => updateCommodity(idx, 'commodity', v)} options={COMMODITY_OPTIONS} />
                         <Input label="Specific Product" value={c.products} onChange={(v) => updateCommodity(idx, 'products', v)} placeholder="e.g. Tomatoes, Cabbage" />
                         <Input label="Size of Area (ha)" type="number" step="0.01" value={c.sizeOfArea} onChange={(v) => updateCommodity(idx, 'sizeOfArea', v)} />
-                        <Input label="Annual Volume (kg)" type="number" value={c.annualVolume} onChange={(v) => updateCommodity(idx, 'annualVolume', v)} />
+                        <Select label="Annual Volume (unit)" value={c.annualVolumeUnit} onChange={(v) => updateCommodity(idx, 'annualVolumeUnit', v)} options={ANNUAL_VOLUME_UNIT_OPTIONS} />
+                        {c.annualVolumeUnit && (
+                          <Input label={`Volume (${c.annualVolumeUnit})`} type="number" step="0.01" value={c.annualVolume} onChange={(v) => updateCommodity(idx, 'annualVolume', v)} placeholder="Enter amount..." />
+                        )}
                         <Input label="Price per Unit (PHP)" type="number" step="0.01" value={c.pricePerUnit} onChange={(v) => updateCommodity(idx, 'pricePerUnit', v)} />
                         <Select label="Certification Status" value={c.certification} onChange={(v) => updateCommodity(idx, 'certification', v)} options={CERTIFICATION_OPTIONS} />
                       </div>

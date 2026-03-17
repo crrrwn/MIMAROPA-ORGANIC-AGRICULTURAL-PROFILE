@@ -10,7 +10,7 @@ function emptyCommodity() {
 function emptyMetrics() {
   return {
     oaArea: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0 },
-    practitioners: { totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0, totalMale: 0, totalFemale: 0, totalPWD: 0, totalSeniorCitizen: 0, totalIP: 0, totalYouth: 0 },
+    practitioners: { totalFarmers: 0, totalDevoted: 0, totalPGSCertified: 0, total3rdParty: 0, totalMale: 0, totalFemale: 0, totalPWD: 0, totalSeniorCitizen: 0, totalIP: 0, totalYouth: 0 },
     fcas: {
       engageInOA: 0,
       organicMembersMale: 0,
@@ -60,6 +60,7 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
         });
 
         const processIndividual = (d, target) => {
+          target.practitioners.totalFarmers += 1;
           const area = parseFloat(d.organicArea) || 0;
           const name = d.completeName || [d.surname, d.firstName].filter(Boolean).join(' ') || 'N/A';
           const coms = Array.isArray(d.commodities) ? d.commodities : (d.commodity ? [{ commodity: d.commodity, sizeOfArea: d.organicArea, certification: d.certification, products: '' }] : []);
@@ -108,7 +109,8 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
             const comm = (c.commodity || '').toLowerCase();
             const itemArea = parseFloat(c.sizeOfArea) || 0;
             const itemVolume = parseFloat(c.annualVolume) || 0;
-            const item = { name, products: c.products || '', area: itemArea, volume: itemVolume, commodity: c.commodity };
+            const itemVolumeUnit = (c.annualVolumeUnit || '').trim() || 'Kg';
+            const item = { name, products: c.products || '', area: itemArea, volume: itemVolume, volumeUnit: itemVolumeUnit, commodity: c.commodity };
             if (comm.includes('rice')) {
               target.commodities.rice.totalArea += itemArea;
               target.commodities.rice.items.push(item);
@@ -226,6 +228,7 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
           acc.oaArea.totalDevoted += m.oaArea.totalDevoted;
           acc.oaArea.totalPGSCertified += m.oaArea.totalPGSCertified;
           acc.oaArea.total3rdParty += m.oaArea.total3rdParty;
+          acc.practitioners.totalFarmers += m.practitioners.totalFarmers || 0;
           acc.practitioners.totalDevoted += m.practitioners.totalDevoted;
           acc.practitioners.totalPGSCertified += m.practitioners.totalPGSCertified;
           acc.practitioners.total3rdParty += m.practitioners.total3rdParty;

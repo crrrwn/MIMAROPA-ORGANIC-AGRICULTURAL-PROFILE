@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { useDashboardDataByProvince } from '../hooks/useDashboardDataByProvince';
 import { PROVINCES } from '../constants';
 
-const COLORS = ['#88BC44', '#3E6F8F', '#1E7CC8', '#F1F5E8', '#2a6bb5', '#4a7a6e'];
+const COLORS = ['#88BC44', '#3E6F8F', '#1E7CC8', '#8D4A25', '#2a6bb5', '#4a7a6e'];
 const CHART_AXIS = '#64748b'; // slate-500
 const tooltipStyle = {
   borderRadius: '16px',
@@ -143,8 +143,11 @@ export default function IndividualFormsPage() {
               </div>
               <h3 className="font-bold text-slate-800 text-lg">OA Practitioners</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <MetricCard title="Total Number of Farmers" value={data?.practitioners?.totalFarmers ?? 0} icon="mdi:account-group-outline" />
               <MetricCard title="Devoted Farmers" value={data?.practitioners?.totalDevoted ?? 0} icon="mdi:account-heart-outline" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
               <MetricCard title="PGS Certified" value={data?.practitioners?.totalPGSCertified ?? 0} icon="mdi:certificate-outline" />
               <MetricCard title="3rd Party Certified" value={data?.practitioners?.total3rdParty ?? 0} icon="mdi:file-certificate-outline" />
             </div>
@@ -280,7 +283,7 @@ export default function IndividualFormsPage() {
                       <th className="py-3.5 px-4 font-semibold">Name</th>
                       <th className="py-3.5 px-4 font-semibold">Products</th>
                       <th className="py-3.5 px-4 font-semibold text-right">Area (ha)</th>
-                      <th className="py-3.5 px-4 font-semibold text-right">Volume (kg)</th>
+                      <th className="py-3.5 px-4 font-semibold text-right">Annual Volume</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-300">
@@ -289,7 +292,7 @@ export default function IndividualFormsPage() {
                         <td className="py-3 px-4 font-medium text-slate-800">{item.name}</td>
                         <td className="py-3 px-4 text-slate-500">{item.products}</td>
                         <td className="py-3 px-4 text-slate-800 text-right tabular-nums">{Number(item.area || 0).toFixed(2)}</td>
-                        <td className="py-3 px-4 text-slate-500 text-right tabular-nums">{Number(item.volume || 0).toLocaleString()}</td>
+                        <td className="py-3 px-4 text-slate-500 text-right tabular-nums">{Number(item.volume || 0).toLocaleString()}{item.volumeUnit ? ` ${item.volumeUnit}` : ' Kg'}</td>
                       </tr>
                     ))}
                   </tbody>
