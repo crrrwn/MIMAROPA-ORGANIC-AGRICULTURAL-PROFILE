@@ -126,7 +126,7 @@ export default function IndividualForm() {
 
   const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-  const completeName = (form.firstName || '') + ([form.surname, form.middleName, form.extension].filter(Boolean).length ? ', ' + [form.surname, form.middleName].filter(Boolean).join(' ') + (form.extension ? ' ' + form.extension : '') : '');
+  const completeName = (form.firstName || '') + ([form.surname, form.middleName, form.extension].filter(Boolean).length ? ', ' + [form.middleName, form.surname].filter(Boolean).join(' ') + (form.extension ? ' ' + form.extension : '') : '');
   const completeAddress = [form.barangay, form.municipality, form.province].filter(Boolean).join(', ');
 
   const addCommodity = () => {
