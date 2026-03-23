@@ -39,6 +39,7 @@ export default function IndividualForm() {
   const [loading, setLoading] = useState(isEdit);
   const [form, setForm] = useState({
     rsbsaNumber: '',
+    farmersAssociationCooperative: '',
     sex: '',
     dateOfBirth: '',
     pwd: 'No',
@@ -71,6 +72,7 @@ export default function IndividualForm() {
           const legacyPwd = (d.pwd || '').toLowerCase();
           setForm({
             rsbsaNumber: d.rsbsaNumber || '',
+            farmersAssociationCooperative: d.farmersAssociationCooperative || '',
             sex: d.sex || '',
             dateOfBirth: d.dateOfBirth || '',
             pwd: d.pwd !== undefined ? (d.pwd === 'Yes' || legacyPwd === 'yes' ? 'Yes' : 'No') : 'No',
@@ -250,6 +252,13 @@ export default function IndividualForm() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <Input label="Date Submitted" type="date" value={form.dateSubmitted} onChange={(v) => update('dateSubmitted', v)} title="Petsa kung kailan isinumite ang form" />
                     <Input label="RSBSA Number" value={form.rsbsaNumber} onChange={(v) => update('rsbsaNumber', v)} placeholder="e.g. 12345678" />
+                  </div>
+                  <div className="grid grid-cols-1 gap-5">
+                    <Input
+                      label="Name of Farmers Association/Cooperative"
+                      value={form.farmersAssociationCooperative}
+                      onChange={(v) => update('farmersAssociationCooperative', v)}
+                    />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <Select label="Sex" value={form.sex} onChange={(v) => update('sex', v)} options={SEX_OPTIONS} />

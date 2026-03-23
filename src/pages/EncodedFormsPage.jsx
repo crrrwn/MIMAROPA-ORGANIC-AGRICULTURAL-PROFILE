@@ -55,7 +55,8 @@ export default function EncodedFormsPage() {
     const cert = getIndividualCertification(row).toLowerCase();
     const addr = (row.completeAddress || '').toLowerCase();
     const rsbsa = (row.rsbsaNumber || '').toLowerCase();
-    return name.includes(q) || prov.includes(q) || cert.includes(q) || addr.includes(q) || rsbsa.includes(q);
+    const farmersAssociationCooperative = (row.farmersAssociationCooperative || '').toLowerCase();
+    return name.includes(q) || prov.includes(q) || cert.includes(q) || addr.includes(q) || rsbsa.includes(q) || farmersAssociationCooperative.includes(q);
   });
 
   const filteredFcas = fcas.filter((row) => {
@@ -93,8 +94,8 @@ export default function EncodedFormsPage() {
   };
 
   const handleExportIndividualExcel = async () => {
-    const headers = ['Name', 'Province', 'Certification', 'Organic Area (ha)', 'Date Submitted', 'RSBSA Number', 'Sex', 'Date of Birth', 'Civil Status', 'PWD', 'Senior Citizen', 'IP', 'Youth', 'Mobile', 'Years in OA', 'Address', 'Commodities'];
-    const columnWidths = [28, 18, 22, 14, 14, 14, 10, 14, 12, 8, 14, 8, 8, 14, 10, 35, 45];
+    const headers = ['Name', 'Province', 'Certification', 'Organic Area (ha)', 'Date Submitted', 'RSBSA Number', 'Farmers Association/Cooperative', 'Sex', 'Date of Birth', 'Civil Status', 'PWD', 'Senior Citizen', 'IP', 'Youth', 'Mobile', 'Years in OA', 'Address', 'Commodities'];
+    const columnWidths = [28, 18, 22, 14, 14, 14, 24, 10, 14, 12, 8, 14, 8, 8, 14, 10, 35, 45];
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'MIMAROPA Organic Profile';
@@ -135,6 +136,7 @@ export default function EncodedFormsPage() {
         row.organicArea || '',
         dateStr,
         row.rsbsaNumber || '',
+        row.farmersAssociationCooperative || '',
         row.sex || '',
         row.dateOfBirth || '',
         row.civilStatus || '',
@@ -475,6 +477,7 @@ export default function EncodedFormsPage() {
                               <td colSpan={6} className="bg-slate-50/50 p-6 border-b border-slate-300">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm">
                                   <div><span className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">RSBSA Number</span><span className="text-slate-800 font-normal">{row.rsbsaNumber || '—'}</span></div>
+                                  <div><span className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">Farmers Association/Cooperative</span><span className="text-slate-800 font-normal">{row.farmersAssociationCooperative || '—'}</span></div>
                                   <div><span className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">Sex</span><span className="text-slate-800 font-normal">{row.sex}</span></div>
                                   <div><span className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">Date of Birth</span><span className="text-slate-800 font-normal">{row.dateOfBirth}</span></div>
                                   <div><span className="block text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">Civil Status</span><span className="text-slate-800 font-normal">{row.civilStatus}</span></div>
