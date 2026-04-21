@@ -65,25 +65,24 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
           const name = d.completeName || [d.surname, d.firstName].filter(Boolean).join(' ') || 'N/A';
           const coms = Array.isArray(d.commodities) ? d.commodities : (d.commodity ? [{ commodity: d.commodity, sizeOfArea: d.organicArea, certification: d.certification, products: '' }] : []);
           const hasCommodityCerts = coms.some((c) => (c.certification || '').trim());
+          const certFlags = { devoted: false, pgs: false, thirdParty: false };
 
           if (hasCommodityCerts) {
-            // Count by each commodity's certification (e.g. 2 commodities with different certs = both count)
             coms.forEach((c) => {
               const cert = (c.certification || '').toLowerCase();
               const itemArea = parseFloat(c.sizeOfArea) || 0;
               if (cert.includes('devoted')) {
                 target.oaArea.totalDevoted += itemArea;
-                target.practitioners.totalDevoted++;
+                certFlags.devoted = true;
               }
               if (cert.includes('pgs')) {
                 target.oaArea.totalPGSCertified += itemArea;
-                target.practitioners.totalPGSCertified++;
-                target.pgs.certifiedFarmers++;
+                certFlags.pgs = true;
                 target.pgs.certifiedArea += itemArea;
               }
               if (cert.includes('3rd') || cert.includes('third')) {
                 target.oaArea.total3rdParty += itemArea;
-                target.practitioners.total3rdParty++;
+                certFlags.thirdParty = true;
               }
             });
           } else {
@@ -91,26 +90,39 @@ export function useDashboardDataByProvince(province = null, selectedYear = null)
             const cert = (d.certification || '').toLowerCase();
             if (cert.includes('devoted')) {
               target.oaArea.totalDevoted += area;
-              target.practitioners.totalDevoted++;
+              certFlags.devoted = true;
             }
             if (cert.includes('pgs')) {
               target.oaArea.totalPGSCertified += area;
-              target.practitioners.totalPGSCertified++;
-              target.pgs.certifiedFarmers++;
+              certFlags.pgs = true;
               target.pgs.certifiedArea += area;
             }
             if (cert.includes('3rd') || cert.includes('third')) {
               target.oaArea.total3rdParty += area;
-              target.practitioners.total3rdParty++;
+              certFlags.thirdParty = true;
             }
           }
+          if (certFlags.devoted) target.practitioners.totalDevoted++;
+          if (certFlags.pgs) {
+            target.practitioners.totalPGSCertified++;
+            target.pgs.certifiedFarmers++;
+          }
+          if (certFlags.thirdParty) target.practitioners.total3rdParty++;
 
           coms.forEach((c) => {
             const comm = (c.commodity || '').toLowerCase();
             const itemArea = parseFloat(c.sizeOfArea) || 0;
             const itemVolume = parseFloat(c.annualVolume) || 0;
             const itemVolumeUnit = (c.annualVolumeUnit || '').trim() || 'Kg';
-            const item = { name, products: c.products || '', area: itemArea, volume: itemVolume, volumeUnit: itemVolumeUnit, commodity: c.commodity };
+            const item = {
+              name,
+              products: c.products || '',
+              area: itemArea,
+              volume: itemVolume,
+              volumeUnit: itemVolumeUnit,
+              commodity: c.commodity,
+              certification: (c.certification || d.certification || '').trim(),
+            };
             if (comm.includes('rice')) {
               target.commodities.rice.totalArea += itemArea;
               target.commodities.rice.items.push(item);

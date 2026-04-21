@@ -293,6 +293,7 @@ export default function Dashboard() {
                     <tr>
                       <th className="py-3.5 px-4 font-semibold">Name</th>
                       <th className="py-3.5 px-4 font-semibold">Products</th>
+                      <th className="py-3.5 px-4 font-semibold">Certification Status</th>
                       <th className="py-3.5 px-4 font-semibold text-right">Area (ha)</th>
                       <th className="py-3.5 px-4 font-semibold text-right">Annual Volume</th>
                     </tr>
@@ -302,6 +303,7 @@ export default function Dashboard() {
                       <tr key={i} className="hover:bg-white transition-colors">
                         <td className="py-3 px-4 font-medium text-slate-800">{item.name}</td>
                         <td className="py-3 px-4 text-slate-500">{item.products}</td>
+                        <td className="py-3 px-4 text-slate-600">{item.certification || '—'}</td>
                         <td className="py-3 px-4 text-slate-800 text-right tabular-nums">{Number(item.area || 0).toFixed(2)}</td>
                         <td className="py-3 px-4 text-slate-500 text-right tabular-nums">{Number(item.volume || 0).toLocaleString()}{item.volumeUnit ? ` ${item.volumeUnit}` : ' Kg'}</td>
                       </tr>

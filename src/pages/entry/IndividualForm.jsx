@@ -346,6 +346,12 @@ export default function IndividualForm() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-6 border-t border-slate-300">
                     <Input label="Years in Organic Farming" type="number" value={form.yearsInOrganicFarming} onChange={(v) => update('yearsInOrganicFarming', v)} />
                     <Input label="Total Organic Area (ha)" type="number" step="0.01" value={form.organicArea} onChange={(v) => update('organicArea', v)} />
+                    <Select
+                      label="Overall Certification Status"
+                      value={form.certification}
+                      onChange={(v) => update('certification', v)}
+                      options={CERTIFICATION_OPTIONS}
+                    />
                   </div>
                 </div>
               </Section>
@@ -367,6 +373,13 @@ export default function IndividualForm() {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         <Select label="Commodity Category" value={c.commodity} onChange={(v) => updateCommodity(idx, 'commodity', v)} options={COMMODITY_OPTIONS} />
+                        <Select
+                          label="Certification Status"
+                          value={c.certification}
+                          onChange={(v) => updateCommodity(idx, 'certification', v)}
+                          options={CERTIFICATION_OPTIONS}
+                          required
+                        />
                         <Input label="Specific Product" value={c.products} onChange={(v) => updateCommodity(idx, 'products', v)} placeholder="e.g. Tomatoes, Cabbage" />
                         <Input label="Size of Area (ha)" type="number" step="0.01" value={c.sizeOfArea} onChange={(v) => updateCommodity(idx, 'sizeOfArea', v)} />
                         <Select label="Annual Volume (unit)" value={c.annualVolumeUnit} onChange={(v) => updateCommodity(idx, 'annualVolumeUnit', v)} options={ANNUAL_VOLUME_UNIT_OPTIONS} />
@@ -374,7 +387,6 @@ export default function IndividualForm() {
                           <Input label={`Volume (${c.annualVolumeUnit})`} type="number" step="0.01" value={c.annualVolume} onChange={(v) => updateCommodity(idx, 'annualVolume', v)} placeholder="Enter amount..." />
                         )}
                         <Input label="Price per Unit (PHP)" type="number" step="0.01" value={c.pricePerUnit} onChange={(v) => updateCommodity(idx, 'pricePerUnit', v)} />
-                        <Select label="Certification Status" value={c.certification} onChange={(v) => updateCommodity(idx, 'certification', v)} options={CERTIFICATION_OPTIONS} />
                       </div>
                     </div>
                   ))}
