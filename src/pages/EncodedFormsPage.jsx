@@ -130,11 +130,7 @@ export default function EncodedFormsPage() {
         ? row.commodities
             .map((c) => {
               const commodityLabel = (c?.products || c?.commodity || '').trim();
-              const size = String(c?.sizeOfArea ?? '').trim();
-              if (!commodityLabel && !size) return '';
-              if (commodityLabel && size) return `${commodityLabel} ${size} ha`;
-              if (commodityLabel) return commodityLabel;
-              return `${size} ha`;
+              return commodityLabel;
             })
             .filter(Boolean)
             .join('; ')
