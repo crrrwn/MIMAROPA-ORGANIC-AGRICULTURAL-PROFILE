@@ -127,7 +127,17 @@ export default function EncodedFormsPage() {
     individuals.forEach((row, idx) => {
       const dateStr = row.dateSubmitted ? new Date(row.dateSubmitted).toLocaleDateString() : (row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '—');
       const commoditiesStr = Array.isArray(row.commodities) && row.commodities.length > 0
-        ? row.commodities.map((c) => `${c.commodity} • ${c.products || ''} • ${c.sizeOfArea || ''} ha${c.certification ? ` • ${c.certification}` : ''}`).join('; ')
+        ? row.commodities
+            .map((c) => {
+              const commodityLabel = (c?.products || c?.commodity || '').trim();
+              const size = String(c?.sizeOfArea ?? '').trim();
+              if (!commodityLabel && !size) return '';
+              if (commodityLabel && size) return `${commodityLabel} ${size} ha`;
+              if (commodityLabel) return commodityLabel;
+              return `${size} ha`;
+            })
+            .filter(Boolean)
+            .join('; ')
         : '';
       const dataRow = sheet.addRow([
         row.completeName || [row.surname, row.firstName].filter(Boolean).join(' '),
